@@ -61,10 +61,10 @@ const DiaryContext = createContext<DiaryContextValue | null>(null);
 const MOCK_DIARY_LOGS: DiaryLogEntry[] = [
   {
     logId:        "log-001",
-    showId:       63333,
+    showId:       136315,
     title:        "The Bear",
     seasonNumber: 2,
-    posterUrl:    "https://image.tmdb.org/t/p/w185/sHFlbKS3WLqMnp9t2ghADIJFnuQ.jpg",
+    posterUrl:    "https://image.tmdb.org/t/p/w185/4fVddnbhcmzRZE14NJY03GKS6Fn.jpg",
     dateLogged:   "2026-06-15",
     rating:       5,
     isFavorite:   true,
@@ -96,7 +96,7 @@ const MOCK_DIARY_LOGS: DiaryLogEntry[] = [
     showId:       1622,
     title:        "Suits",
     seasonNumber: 1,
-    posterUrl:    "https://image.tmdb.org/t/p/w185/vYKK7NMnVQeHLJHG9SVo6IrBXTP.jpg",
+    posterUrl:    "https://image.tmdb.org/t/p/w342/vQiryp6LioFxQThywxbC6TuoDjy.jpg",
     dateLogged:   "2026-05-28",
     rating:       3,
     isFavorite:   false,

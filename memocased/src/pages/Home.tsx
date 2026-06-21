@@ -139,7 +139,7 @@ const INITIAL_PROGRESS: ActiveShowProgress[] = [
   {
     showId: 63333,
     title: "The Bear",
-    backdropUrl: "https://image.tmdb.org/t/p/w1280/8Au7fcOFhqDMPFbV57qBNrGKm7Q.jpg",
+    backdropUrl: "https://media.themoviedb.org/t/p/w533_and_h300_face/ety3PHo2W8yZZgEFp7QUBFZOYke.jpg",
     currentSeason: 2,
     currentEpisode: 9,
     totalSeasons: 3,
@@ -159,7 +159,7 @@ const INITIAL_WATCHLIST: WatchlistItem[] = [
   {
     showId: 1622,
     title: "Suits",
-    posterUrl: "https://image.tmdb.org/t/p/w342/vYKK7NMnVQeHLJHG9SVo6IrBXTP.jpg",
+    posterUrl: "https://image.tmdb.org/t/p/w342/vQiryp6LioFxQThywxbC6TuoDjy.jpg",
     backdropUrl: "https://image.tmdb.org/t/p/w1280/8MdGCX9o1fFMZcYzx3qHXzGvfM7.jpg",
     totalSeasons: 9,
     episodesPerSeason: [12, 16, 16, 16, 16, 16, 10, 10, 10],
@@ -183,7 +183,7 @@ const INITIAL_WATCHLIST: WatchlistItem[] = [
   {
     showId: 1403,
     title: "Agents of S.H.I.E.L.D.",
-    posterUrl: "https://image.tmdb.org/t/p/w342/bJZFqO9GFbXJyWhC6SfxTiJPMla.jpg",
+    posterUrl: "https://image.tmdb.org/t/p/w342/gHUCCMy1vvj58tzE3dZqeC9SXus.jpg",
     backdropUrl: "https://image.tmdb.org/t/p/w1280/j2QPLdWJbHmEfYfQYEf6fHlUXJW.jpg",
     totalSeasons: 7,
     episodesPerSeason: [22, 22, 22, 22, 22, 13, 13],

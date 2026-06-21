@@ -66,7 +66,7 @@ const MOCK_WATCHLIST: WatchlistShowEntry[] = [
     releaseYear:        2026,
     contentRating:      "TV-14",
     totalEpisodesCount: 8,
-    posterUrl:          "https://image.tmdb.org/t/p/w342/2P2bAJN7nrXkLAQfqVKn1WAOuoz.jpg",
+    posterUrl:          "https://image.tmdb.org/t/p/w342/h3s0Cd2JppeWA4UjTuSRauL52P7.jpg",
   },
   {
     showId:             80539,
@@ -75,7 +75,7 @@ const MOCK_WATCHLIST: WatchlistShowEntry[] = [
     releaseYear:        2024,
     contentRating:      "TV-MA",
     totalEpisodesCount: 8,
-    posterUrl:          "https://image.tmdb.org/t/p/w342/AnsSKR9obnTd3bUyHN8VeQzWmHe.jpg",
+    posterUrl:          "https://image.tmdb.org/t/p/w342/c15BtJxCXMrISLVmysdsnZUPQft.jpg",
   },
   {
     showId:             95479,
@@ -84,7 +84,7 @@ const MOCK_WATCHLIST: WatchlistShowEntry[] = [
     releaseYear:        2024,
     contentRating:      "TV-MA",
     totalEpisodesCount: 10,
-    posterUrl:          "https://image.tmdb.org/t/p/w342/70OBVF7s8fjyFkUODNFLPGVD3p2.jpg",
+    posterUrl:          "https://image.tmdb.org/t/p/w342/7O4iVfOMQmdCSxhOg1WnzG1AgYT.jpg",
   },
   {
     showId:             119051,
@@ -102,7 +102,7 @@ const MOCK_WATCHLIST: WatchlistShowEntry[] = [
     releaseYear:        2024,
     contentRating:      "TV-MA",
     totalEpisodesCount: 7,
-    posterUrl:          "https://image.tmdb.org/t/p/w342/wpOWCnkM1jr5tQEDH9NfanQEhKi.jpg",
+    posterUrl:          "https://image.tmdb.org/t/p/w342/vOWcqC4oDQws1doDWLO7d3dh5qc.jpg",
   },
   {
     showId:             71912,

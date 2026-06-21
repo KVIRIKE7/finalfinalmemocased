@@ -57,9 +57,9 @@ const MOCK_FAVORITES: FavoriteShow[] = [
     releaseYear: "2016",
   },
   {
-    showId: 63333,
+    showId: 136315,
     title: "The Bear",
-    posterPath: "/sHFlbKS3WLqMnp9t2ghADIJFnuQ.jpg",
+    posterPath: "/4fVddnbhcmzRZE14NJY03GKS6Fn.jpg",
     releaseYear: "2022",
   },
 ];
