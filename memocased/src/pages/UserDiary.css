@@ -1,0 +1,502 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   UserDiary.css
+   All rules scoped to .user-diary-page, .diary-* descendants.
+   Re-uses .profile-tabs from UserProfile.css for the shared sub-tab bar.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   1. PAGE SHELL
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.user-diary-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
+  background-color: var(--color-bg);
+  padding: var(--space-8) var(--space-6) var(--space-16);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+/* ── Page header ── */
+
+.user-diary-page__header {
+  padding-top: var(--space-2);
+}
+
+.user-diary-page__heading {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   1.5. SHARED PROFILE SUB-TAB BAR
+   This block was referenced as "defined in UserProfile.css" but that file
+   was never created — .profile-tabs had zero CSS rules applied anywhere,
+   so the <ul><li> markup fell back to default list-item block stacking.
+   That is the actual root cause of the vertical-stacking bug, not an
+   overridden flex property. Defining it here (with !important as a
+   defensive guard per spec) fixes it for both UserDiary and any other
+   page that reuses this exact class tree.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.profile-tabs {
+  width: 100%;
+}
+
+.profile-tabs__list {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;   /* prevents items wrapping into a stack
+                                      under any viewport or interaction state */
+  align-items: center !important;
+  justify-content: flex-start;
+  gap: var(--space-1);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid var(--color-border);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.profile-tabs__list::-webkit-scrollbar {
+  display: none;
+}
+
+/* Each <li> must not stretch, shrink, or wrap onto its own line */
+.profile-tabs__item {
+  flex-shrink: 0 !important;   /* never compresses under row pressure        */
+  flex-grow: 0 !important;     /* never expands to absorb leftover space     */
+  width: auto;                 /* explicitly override any width: 100% inheritance */
+  list-style: none;
+}
+
+/*
+ * .profile-tabs__link is the actual interactive nav item in this codebase
+ * (a react-router <NavLink>, not a <button>) — it is the equivalent of the
+ * ".diary-header-row button" / ".profile-subnav a" target from the spec.
+ * Locked to a frozen, predictable footprint so route changes (which toggle
+ * the --active modifier and font-weight) never trigger a resize.
+ */
+.profile-tabs__link {
+  flex-shrink: 0 !important;
+  flex-grow: 0 !important;
+  white-space: nowrap !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  padding: var(--space-3) var(--space-1);
+  margin-bottom: -1px;    /* sits flush on top of the border-bottom divider */
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-dim);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.profile-tabs__link:hover {
+  color: var(--color-text);
+}
+
+/*
+ * Active-state font-weight bump (medium → semibold) is the most likely
+ * cause of tabs visibly growing/shrinking on route change: bold text is
+ * measurably wider than regular text at the same font-size, so swapping
+ * weights alone shifts each tab's footprint even though we've frozen
+ * flex-grow/flex-shrink above. The fix: use text-shadow to fake a bolder
+ * visual weight instead of switching font-weight, so the rendered glyph
+ * width never changes between active and inactive states.
+ */
+.profile-tabs__link--active {
+  color: var(--color-text);
+  border-bottom-color: var(--color-green);
+  font-weight: var(--font-weight-medium);  /* unchanged from inactive state */
+  text-shadow: 0 0 0.35px currentColor;     /* simulates semibold without resizing */
+}
+
+/* Note: spacing between tab items comes from `gap` on .profile-tabs__list
+   above — no separate margin rule needed here, which would double the gap. */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   2. DIARY TABLE — outer container
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.diary-table {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   3. DIARY ROW — single log entry
+   Column widths are fixed via flex-basis so every row aligns vertically
+   into clean columns, Letterboxd-style.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.diary-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid #1e2733;     /* thin blue-tinted divider, per spec */
+  transition: background-color var(--transition-fast);
+}
+
+.diary-row:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.diary-row:last-child {
+  border-bottom: none;
+}
+
+/* ── Column 1: Month sticky label ── */
+
+.diary-row__month-col {
+  flex: 0 0 92px;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.diary-row__month-label {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--color-text);
+  line-height: var(--line-height-tight);
+  white-space: nowrap;
+}
+
+/* ── Column 2: Day digit ── */
+
+.diary-row__day-col {
+  flex: 0 0 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.diary-row__day-number {
+  font-size: 26px;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-dim);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Column 3: Media (poster + title) ── */
+
+.diary-row__media-col {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.diary-row__poster-thumb {
+  flex-shrink: 0;
+  width: 40px;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  object-position: center top;
+  border-radius: 3px;
+  display: block;
+  border: 1px solid var(--color-border);
+}
+
+.diary-row__media-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* ── Column 4: Rating stars ── */
+
+.diary-row__rating-col {
+  flex: 0 0 92px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.diary-star-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  line-height: 1;
+}
+
+.diary-star-rating__star {
+  font-size: var(--font-size-sm);
+  color: var(--color-green);          /* signature emerald tint, per spec */
+  line-height: 1;
+}
+
+/* ── Column 5: Heart / favorite ── */
+
+.diary-row__like-col {
+  flex: 0 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.diary-row__heart-icon {
+  font-size: var(--font-size-base);
+  color: #ff3b5c;                     /* vibrant red-pink, per spec */
+  line-height: 1;
+  filter: drop-shadow(0 0 4px rgba(255, 59, 92, 0.35));
+}
+
+/* ── Column 6: Review button ── */
+
+.diary-row__review-col {
+  flex: 0 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.diary-row__review-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.diary-row__review-button:hover {
+  color: var(--color-text);
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+/* ── Column 7: Edit pencil ── */
+
+.diary-row__edit-col {
+  flex: 0 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.diary-row__edit-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.diary-row__edit-button:hover {
+  color: var(--color-text);
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   4. EMPTY STATE
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.diary-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-16) var(--space-8);
+  gap: var(--space-3);
+  text-align: center;
+  background-color: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.diary-empty-state__heading {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-dim);
+  margin: 0;
+}
+
+.diary-empty-state__sub {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin: 0;
+  max-width: 280px;
+  line-height: var(--line-height-normal);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   5. REVIEW MODAL OVERLAY
+   Mounted when a review button is clicked — markup pending wiring, styles
+   ready in advance.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.diary-review-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(10, 13, 16, 0.85);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  animation: fadeIn 160ms ease both;
+}
+
+.diary-review-modal {
+  width: 100%;
+  max-width: 500px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 200ms ease both;
+  position: relative;
+}
+
+/* ── Modal header: show title + close button ── */
+
+.diary-review-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.diary-review-modal__title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin: 0;
+}
+
+.diary-review-modal__subtitle {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin: 2px 0 0;
+}
+
+.diary-review-modal__close-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.diary-review-modal__close-button:hover {
+  color: var(--color-text);
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* ── Quote content ── */
+
+.diary-review-modal__quote {
+  font-style: italic;
+  font-size: var(--font-size-base);
+  color: #d8dde2;                      /* off-white per spec */
+  line-height: var(--line-height-normal);
+  margin: 0 0 var(--space-2);
+  padding: 0 var(--space-2);
+}
+
+.diary-review-modal__quote::before {
+  content: "\201C";                    /* opening curly quote “ */
+  color: var(--color-text-muted);
+  margin-right: 2px;
+}
+
+.diary-review-modal__quote::after {
+  content: "\201D";                    /* closing curly quote ” */
+  color: var(--color-text-muted);
+  margin-left: 2px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   6. RESPONSIVE
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .user-diary-page {
+    padding: var(--space-6) var(--space-4) var(--space-10);
+    gap: var(--space-4);
+  }
+
+  .diary-row {
+    gap: var(--space-2);
+  }
+
+  .diary-row__month-col {
+    flex: 0 0 64px;
+  }
+
+  .diary-row__month-label {
+    font-size: 10px;
+  }
+
+  .diary-row__day-col {
+    flex: 0 0 32px;
+  }
+
+  .diary-row__day-number {
+    font-size: 20px;
+  }
+
+  .diary-row__poster-thumb {
+    width: 32px;
+  }
+
+  .diary-row__media-title {
+    font-size: var(--font-size-xs);
+  }
+
+  /* Hide rating/heart columns on very narrow viewports to protect title space */
+  .diary-row__rating-col {
+    flex: 0 0 60px;
+  }
+}
+
+@media (max-width: 480px) {
+  .diary-row__rating-col {
+    display: none;
+  }
+}

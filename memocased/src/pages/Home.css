@@ -1,0 +1,558 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   Home.css
+   Dashboard styles: Continue Watching · Start Watching · Streak Banner.
+   All rules scoped to .home-page and its BEM descendants.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   1. PAGE SHELL
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.home-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);            /* generous breathing room between rows      */
+  padding: var(--space-8) 0 var(--space-16);
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   2. SHARED SECTION STRUCTURE
+   Used by both .cw-section and .sw-section via identical patterns.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* ── Section containers ── */
+
+.cw-section,
+.sw-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ── Section header row ── */
+
+.cw-section__header,
+.sw-section__header {
+  padding: 0 var(--space-6);
+}
+
+/* ── Section heading link — the entire "Continue Watching >" is clickable ── */
+
+.cw-section__heading-link,
+.sw-section__heading-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.cw-section__heading-link:hover,
+.sw-section__heading-link:hover {
+  color: var(--color-text);
+}
+
+.cw-section__heading,
+.sw-section__heading {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-dim);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  margin: 0;
+  transition: color var(--transition-fast);
+}
+
+.cw-section__heading-link:hover .cw-section__heading,
+.sw-section__heading-link:hover .sw-section__heading {
+  color: var(--color-text);
+}
+
+.cw-section__heading-arrow,
+.sw-section__heading-arrow {
+  font-size: var(--font-size-base);
+  color: var(--color-text-muted);
+  line-height: 1;
+  transition: color var(--transition-fast), transform var(--transition-fast);
+}
+
+.cw-section__heading-link:hover .cw-section__heading-arrow,
+.sw-section__heading-link:hover .sw-section__heading-arrow {
+  color: var(--color-green);
+  transform: translateX(3px);
+}
+
+/* ── Horizontal scroll container ── */
+
+.cw-section__scroll-container,
+.sw-section__scroll-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: var(--space-4);
+  overflow-x: auto;
+  overflow-y: visible;
+  padding: var(--space-2) var(--space-6) var(--space-3); /* bottom pad for box-shadow */
+
+  /* Hide scrollbar — Webkit */
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* IE / Edge legacy */
+}
+
+.cw-section__scroll-container::-webkit-scrollbar,
+.sw-section__scroll-container::-webkit-scrollbar {
+  display: none;                  /* Chrome / Safari */
+}
+
+/* Subtle right-edge fade indicating more content on scroll */
+.cw-section,
+.sw-section {
+  position: relative;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   3. SHARED CARD TEXT & ACTION ELEMENTS
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* ── Card title ── */
+
+.cw-card__title,
+.sw-card__title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ── Card subtitle ── */
+
+.cw-card__subtitle,
+.sw-card__subtitle {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-dim);
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+/* ── Shared checkmark SVG icon ── */
+
+.check-icon {
+  width: 14px;
+  height: 14px;
+  display: block;
+  flex-shrink: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   4. CONTINUE WATCHING ROW — 16:9 BACKDROP CARDS
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* ── Card slot: fixes the width of each flex child ── */
+
+.cw-section__card-slot {
+  flex: 0 0 268px;               /* fixed width — doesn't grow or shrink       */
+  min-width: 0;                  /* prevents text from blowing out the card    */
+}
+
+/* ── Card root ── */
+
+.cw-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  cursor: default;
+}
+
+/* ── Image wrapper: enforces 16:9 and contains overlaid elements ── */
+
+.cw-card__image-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: var(--color-surface-raise); /* fallback while image loads  */
+  transition: transform var(--transition-base);
+  box-shadow: var(--shadow-sm);
+}
+
+.cw-card:hover .cw-card__image-wrapper {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ── Backdrop image ── */
+
+.cw-card__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  /* Slight scale-on-hover for the image independent of the wrapper */
+  transition: transform var(--transition-slow);
+}
+
+.cw-card:hover .cw-card__image {
+  transform: scale(1.04);
+}
+
+/* ── Progress track: pinned to the very bottom of the image ── */
+
+.cw-card__progress-track {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 2;
+}
+
+/* ── Progress fill bar ── */
+
+.cw-card__progress-fill {
+  height: 100%;
+  background-color: var(--color-green);
+  border-radius: 0 2px 2px 0;   /* rounds only the right edge of the fill     */
+  transition: width 300ms ease;  /* animates when episode increments           */
+}
+
+/* ── Checkmark button: sits bottom-right of the image ── */
+
+.cw-card__check-button {
+  position: absolute;
+  bottom: var(--space-2);
+  right: var(--space-2);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background-color: rgba(20, 24, 28, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  color: var(--color-text-dim);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.cw-card__check-button:hover {
+  background-color: rgba(139, 92, 246, 0.35);  /* purple tint                 */
+  border-color: rgba(139, 92, 246, 0.7);
+  color: #c4b5fd;                               /* light purple                */
+  transform: scale(1.12);
+}
+
+.cw-card__check-button:active {
+  background-color: rgba(139, 92, 246, 0.55);
+  transform: scale(0.97);
+}
+
+/* ── Metadata block below the image ── */
+
+.cw-card__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 var(--space-1);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   5. START WATCHING ROW — 2:3 VERTICAL POSTER CARDS
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* ── Card slot: narrower than CW cards ── */
+
+.sw-section__card-slot {
+  flex: 0 0 152px;
+  min-width: 0;
+}
+
+/* ── Card root ── */
+
+.sw-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  cursor: default;
+}
+
+/* ── Poster wrapper: enforces 2:3 aspect ratio ── */
+
+.sw-card__poster-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: var(--color-surface-raise);
+  transition: transform var(--transition-base);
+  box-shadow: var(--shadow-sm);
+}
+
+.sw-card:hover .sw-card__poster-wrapper {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ── Poster image ── */
+
+.sw-card__poster-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  transition: transform var(--transition-slow);
+}
+
+.sw-card:hover .sw-card__poster-image {
+  transform: scale(1.04);
+}
+
+/* ── Checkmark button: overlaid at the bottom-right of the poster ── */
+
+.sw-card__check-button {
+  position: absolute;
+  bottom: var(--space-2);
+  right: var(--space-2);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background-color: rgba(20, 24, 28, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  color: var(--color-text-dim);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.sw-card__check-button:hover {
+  background-color: rgba(139, 92, 246, 0.35);
+  border-color: rgba(139, 92, 246, 0.7);
+  color: #c4b5fd;
+  transform: scale(1.12);
+}
+
+.sw-card__check-button:active {
+  background-color: rgba(139, 92, 246, 0.55);
+  transform: scale(0.97);
+}
+
+/* ── Metadata block ── */
+
+.sw-card__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 var(--space-1);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   6. ACTIVITY STREAK BANNER
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.streak-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
+  padding: var(--space-5) var(--space-6);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  margin: 0 var(--space-6);
+}
+
+/* ── Left side: flame + text ── */
+
+.streak-banner__left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.streak-banner__flame {
+  font-size: 1.75rem;
+  line-height: 1;
+  display: block;
+  filter: drop-shadow(0 0 8px rgba(255, 140, 0, 0.5));
+}
+
+.streak-banner__text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.streak-banner__count {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  line-height: var(--line-height-tight);
+}
+
+.streak-banner__sub {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  letter-spacing: 0.02em;
+}
+
+/* ── Right side: 7-day calendar grid ── */
+
+.streak-banner__calendar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* ── Individual day slot: label stacked above dot ── */
+
+.streak-banner__day-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* ── Day label (Mon, Tue, etc.) ── */
+
+.streak-banner__day-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  letter-spacing: 0.04em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.streak-banner__day-label--today {
+  color: var(--color-text-dim);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* ── Day dot / indicator block ── */
+
+.streak-banner__day-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  transition:
+    background-color var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+/* Inactive: muted fill + subtle border */
+
+.streak-banner__day-dot--inactive {
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-border);
+}
+
+/* Active: green fill */
+
+.streak-banner__day-dot--active {
+  background-color: var(--color-green);
+  border: 1px solid var(--color-green);
+  box-shadow: 0 0 8px rgba(0, 224, 84, 0.3);
+}
+
+/* Today: extra ring to mark the current day, regardless of active state */
+
+.streak-banner__day-dot--today.streak-banner__day-dot--inactive {
+  border-color: var(--color-text-muted);
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.streak-banner__day-dot--today.streak-banner__day-dot--active {
+  box-shadow:
+    0 0 8px rgba(0, 224, 84, 0.4),
+    0 0 0 2px rgba(0, 224, 84, 0.25);  /* outer glow ring marks today clearly  */
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   7. RESPONSIVE
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .home-page {
+    gap: var(--space-8);
+    padding: var(--space-6) 0 var(--space-10);
+  }
+
+  .cw-section__header,
+  .sw-section__header {
+    padding: 0 var(--space-4);
+  }
+
+  .cw-section__scroll-container,
+  .sw-section__scroll-container {
+    padding: var(--space-2) var(--space-4) var(--space-3);
+    gap: var(--space-3);
+  }
+
+  /* Slightly smaller cards on mobile */
+  .cw-section__card-slot {
+    flex: 0 0 220px;
+  }
+
+  .sw-section__card-slot {
+    flex: 0 0 130px;
+  }
+
+  .streak-banner {
+    margin: 0 var(--space-4);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-4);
+    padding: var(--space-4);
+  }
+
+  .streak-banner__calendar {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .streak-banner__day-dot {
+    width: 32px;             /* wider on mobile so dots are easier to tap      */
+    height: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cw-section__card-slot {
+    flex: 0 0 185px;
+  }
+
+  .sw-section__card-slot {
+    flex: 0 0 110px;
+  }
+}

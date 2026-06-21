@@ -1,0 +1,448 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   ShowDetail.css
+   Step 1: root variables, page canvas, immersive blurred backdrop layer,
+   and the asymmetric two-column core grid.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   1. ROOT VARIABLES
+   ───────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --bg-main: #14181c;
+  --bg-surface: #1c252d;
+  --bg-surface-hover: #24303c;
+  --text-primary: #ffffff;
+  --text-secondary: #9ab;
+  --accent-green: #00e054;
+  --accent-blue: #40bcf4;
+  --accent-orange: #ff8000;
+  --border-color: #2c3440;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   2. PAGE CANVAS — global reset wrapper
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.show-detail-container {
+  background-color: var(--bg-main);
+  min-height: 100vh;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
+  color: var(--text-primary);
+  margin: 0;
+  padding: 0;
+  position: relative;       /* establishes the stacking context the backdrop
+                                layer's children anchor against */
+  overflow: hidden;          /* keeps the blurred backdrop's blur radius from
+                                bleeding a visible edge past the container */
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   3. IMMERSIVE BLURRED BACKDROP LAYER
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.show-detail-backdrop {
+  position: relative;
+  width: 100%;
+  height: 480px;             /* within the requested 450–500px range        */
+}
+
+/* The actual blurred, dimmed backdrop image — a dedicated absolutely
+   positioned element rather than a ::before pseudo-element, since the
+   image source is dynamic (set via inline style from showData.backdrop_path)
+   and pseudo-elements cannot receive a background-image from inline JSX
+   style props as cleanly as a real element can. */
+.show-detail-backdrop__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(20px) brightness(0.35);
+
+  /* Scale slightly past 100% so the heavy blur radius never reveals a
+     sharp, unblurred edge at the container boundary. */
+  transform: scale(1.08);
+}
+
+/* Gradient mask — blends the backdrop's bottom edge seamlessly into the
+   page background so there's no hard seam where the backdrop ends and
+   the rest of the page begins. */
+.show-detail-backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent, var(--bg-main));
+  pointer-events: none;     /* purely visual — never intercepts clicks      */
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   4. ASYMMETRIC TWO-COLUMN CORE GRID
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.show-main-content {
+  position: relative;        /* sits visually on top of the backdrop layer  */
+  max-width: 1050px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: 44px;                 /* within the requested 40–50px range          */
+
+  /* Pulls the content up so it overlaps the bottom portion of the backdrop,
+     which is what creates the "poster sitting on top of the backdrop"
+     immersive effect rather than the content starting flush below it. */
+  margin-top: -160px;
+  padding: 0 24px 48px;
+}
+
+/* ── Left column: artwork card ── */
+
+.show-detail-poster-column {
+  width: 250px;
+}
+
+.show-detail-poster-column img {
+  width: 250px;
+  height: auto;
+  aspect-ratio: 2 / 3;        /* standard film/show poster ratio             */
+  object-fit: cover;
+  display: block;
+  border-radius: 7px;         /* within the requested 6–8px range            */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Right column: details panel ── */
+
+.show-detail-info-column {
+  min-width: 0;               /* prevents long text from forcing grid overflow */
+  text-align: left;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   5. CINEMATIC HEADER TYPOGRAPHY & SYNOPSIS
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.show-detail-header-group {
+  display: flex;
+  align-items: baseline; /* aligns the year's text baseline with the title's,
+                             rather than the box's top/center edge */
+}
+
+.show-detail-header-group h1 {
+  font-weight: 700;
+  font-size: 2.5rem;
+  letter-spacing: -0.02em; /* slight reduction, per spec */
+  margin: 0;
+}
+
+.show-detail-header-group span {
+  color: var(--text-secondary);
+  font-weight: 400; /* lighter weight than the bold h1 beside it */
+  font-size: 1.5rem;
+  margin-left: 12px;
+}
+
+.show-detail-synopsis {
+  color: #cbd5e1;
+  line-height: 1.6;
+  font-size: 1.05rem;
+  margin: 0 0 30px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   6. LETTERBOXD-STYLE ACTION TOOLSTRIP
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.action-toolstrip {
+  display: flex;
+  gap: 12px;
+  margin: 15px 0 25px 0;
+}
+
+/* ── Button base ── */
+
+.toolstrip-btn {
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  transition: all 0.2s ease;
+
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+/* ── Hover — only when NOT already active, so the active glow always wins ── */
+
+.toolstrip-btn:hover:not(.is-active) {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+/* ── Active state overrides — one glow color per button identity ── */
+
+.toolstrip-btn--watch.is-active {
+  background: var(--accent-green);
+  color: #000;
+  border-color: var(--accent-green);
+  box-shadow: 0 0 12px rgba(0, 224, 84, 0.3);
+}
+
+.toolstrip-btn--watchlist.is-active {
+  background: var(--accent-blue);
+  color: #fff;
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 12px rgba(64, 188, 244, 0.3);
+}
+
+.toolstrip-btn--dropped.is-active {
+  background: var(--accent-orange);
+  color: #fff;
+  border-color: var(--accent-orange);
+  box-shadow: 0 0 12px rgba(255, 128, 0, 0.3);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   7. METADATA SUB-NAVIGATION TAB SWITCHER
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.metadata-tabs-nav {
+  display: flex;
+  gap: 24px;
+  border-bottom: 2px solid var(--border-color);
+  margin-top: 40px;
+}
+
+.tab-nav-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 12px 4px;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  /* Reserve the same border the active state will add, at zero width, so
+     toggling .is-active never shifts the row's height (a border that only
+     appears on the active state would otherwise grow the element by its
+     own thickness). */
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px; /* sits exactly on top of the row's own divider,
+                           matching the active state's positioning so
+                           nothing jumps when a tab becomes active */
+}
+
+.tab-nav-btn.is-active {
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--text-primary);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   8. TAB PANEL LAYOUT — Cast & Genres pill grids
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.tab-panel--cast,
+.tab-panel--genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 20px;
+}
+
+.cast-pill,
+.genre-pill {
+  background: var(--bg-surface);
+  padding: 6px 14px;
+  border-radius: 16px;
+  color: var(--text-secondary);
+  text-decoration: none; /* genre-pill is a <Link>, which defaults to
+                             underlined — pills should read as chips,
+                             not as inline text links */
+  font-size: 0.9rem;
+  transition: color 0.2s ease;
+}
+
+.genre-pill:hover {
+  color: var(--accent-green);
+}
+
+.cast-pill:hover {
+  color: var(--accent-green);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   9. SERIALIZD-STYLE COMPACT SEASON ROW CARDS
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.show-seasons-block {
+  margin-top: 40px;
+}
+
+.show-seasons-block__title {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--text-secondary);
+  letter-spacing: 0.04em;
+  margin: 0 0 12px;
+}
+
+/* ── Individual season row card ── */
+
+.season-row-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  background: var(--bg-surface);
+  padding: 12px 20px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  border: 1px solid var(--border-color);
+
+  text-decoration: none; /* season-row-card is a <Link> */
+  color: inherit;
+
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.season-row-card:hover {
+  background: var(--bg-surface-hover);
+  transform: translateX(4px);
+}
+
+/* ── Left segment: poster + text stack, grouped ── */
+
+.season-row-card__left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0; /* lets the text stack truncate instead of forcing the
+                   whole row wider on a long season title */
+}
+
+.season-row-card__poster {
+  width: 50px;
+  aspect-ratio: 2 / 3; /* preserves the vertical film-poster ratio at a
+                           fixed 50px width, regardless of the source
+                           image's actual dimensions */
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.season-row-card__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.season-row-card__title {
+  color: var(--text-primary);
+  font-weight: 600;
+  margin: 0;
+}
+
+.season-row-card__meta {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 2px 0 0;
+}
+
+/* ── Right segment: completion checkbox ── */
+
+.season-row-card__check {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.season-row-card__check input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--accent-green); /* highlights the native checkbox's
+                                          own fill/outline when checked —
+                                          no custom checkbox graphic needed */
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   10. EDGE-TO-EDGE HORIZONTAL RECOMMENDATIONS SHELF
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.similar-shows-shelf {
+  margin-top: 50px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 30px;
+  margin-bottom: 40px;
+}
+
+.similar-shows-shelf__title {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* ── Poster strip rail — horizontal scroll track ── */
+
+.similar-shows-shelf__rail {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+
+  /* Thin, low-profile scrollbar instead of hiding it outright — keeps a
+     visual affordance that the rail scrolls, without the bulky default
+     browser scrollbar dominating the shelf. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+}
+
+.similar-shows-shelf__rail::-webkit-scrollbar {
+  height: 6px;
+}
+
+.similar-shows-shelf__rail::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.similar-shows-shelf__rail::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+/* ── Poster card link — fixed flex-basis, six roughly per row ── */
+
+.similar-shows-shelf__card {
+  flex: 0 0 calc(16.666% - 14px);
+  min-width: 120px;
+  display: block; /* the card is a <Link>; block ensures the <img> inside
+                       it lays out as a normal box rather than inline */
+}
+
+.similar-shows-shelf__card img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.similar-shows-shelf__card:hover img {
+  transform: scale(1.04);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}

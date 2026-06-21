@@ -1,0 +1,398 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   UserWatchlist.css
+   All rules scoped to .user-watchlist-page, .watchlist-* descendants.
+   Re-uses .profile-tabs from the shared sub-tab bar.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   0. PROFILE SUB-NAV ROW — LOCKDOWN
+   The shared .profile-tabs classes are normally defined once in UserDiary.css
+   and reused across every profile sub-page (Diary, Reviews, Watchlist, etc.).
+   That works, but it makes this page silently depend on another page's
+   stylesheet having loaded first. Defining the lockdown rules here too
+   (matching .profile-tabs__list / __item / __link, the actual classes
+   rendered in UserWatchlist.tsx — not the .profile-subnav / nav selectors
+   from the original bug report, which don't exist in this codebase) makes
+   this page self-sufficient and guards against the exact vertical-stacking
+   regression seen on the Diary page if these rules are ever edited or
+   removed elsewhere.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.profile-tabs__list {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: var(--space-6) !important;   /* 24px, matches the spec's gap value */
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid var(--color-border);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.profile-tabs__list::-webkit-scrollbar {
+  display: none;
+}
+
+.profile-tabs__item {
+  flex-shrink: 0 !important;
+  flex-grow: 0 !important;
+  width: auto;
+  list-style: none;
+}
+
+.profile-tabs__link {
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+  display: inline-flex;
+  align-items: center;
+  width: auto;
+  padding: var(--space-3) var(--space-1);
+  margin-bottom: -1px;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-dim);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.profile-tabs__link:hover {
+  color: var(--color-text);
+}
+
+.profile-tabs__link--active {
+  color: var(--color-text);
+  border-bottom-color: var(--color-green);
+  font-weight: var(--font-weight-medium);  /* unchanged from inactive — avoids
+                                               the bold-text-is-wider resize
+                                               bug fixed previously on Diary */
+  text-shadow: 0 0 0.35px currentColor;     /* simulates semibold, zero width shift */
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   1. PAGE SHELL
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.user-watchlist-page {
+  max-width: 1060px;
+  margin: 0 auto;
+  width: 100%;
+  background-color: var(--color-bg);
+  padding: var(--space-8) var(--space-6) var(--space-16);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+/* ── Page header ── */
+
+.user-watchlist-page__header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding-top: var(--space-2);
+}
+
+.user-watchlist-page__heading {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.user-watchlist-page__count {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   2. RESPONSIVE GRID
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.watchlist-media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-4);
+}
+
+.watchlist-media-grid__item {
+  min-width: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   3. SPLIT CARD — outer shell
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.watchlist-split-card {
+  display: flex;
+  flex-direction: row;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform var(--transition-base),
+    box-shadow var(--transition-base),
+    border-color var(--transition-fast);
+  height: 132px;          /* fixed height — poster column and info column match */
+}
+
+.watchlist-split-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-text-muted);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   4. LEFT: POSTER SIDE
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.watchlist-poster-side {
+  flex: 0 0 88px;
+  width: 88px;
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-surface-raise);
+  flex-shrink: 0;
+}
+
+.watchlist-poster-side__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+  transition: transform var(--transition-slow);
+}
+
+.watchlist-split-card:hover .watchlist-poster-side__image {
+  transform: scale(1.04);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   5. RIGHT: INFO SIDE
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.watchlist-info-side {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--space-3);
+}
+
+/* ── Row 1: title group + overflow menu ── */
+
+.watchlist-info-side__top-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.watchlist-info-side__title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.watchlist-info-side__title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  margin: 0;
+  line-height: var(--line-height-tight);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.watchlist-info-side__episode-pointer {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: var(--line-height-snug);
+}
+
+/* ── Overflow (three-dot) menu button ── */
+
+.watchlist-split-card__overflow-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.watchlist-split-card__overflow-button:hover {
+  color: var(--color-text);
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* ── Row 2: year/rating (left) — episode count (right) ── */
+
+.watchlist-info-side__middle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.watchlist-info-side__year-rating-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.watchlist-info-side__year {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-dim);
+  white-space: nowrap;
+}
+
+.watchlist-info-side__rating {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.03em;
+  color: var(--color-text-dim);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.watchlist-info-side__episode-count {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Row 3: chevron action, bottom-right ── */
+
+.watchlist-info-side__bottom-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.watchlist-split-card__chevron-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  color: var(--color-text-dim);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-base);
+}
+
+.watchlist-split-card__chevron-button:hover {
+  background-color: rgba(0, 224, 84, 0.1);
+  border-color: var(--color-green);
+  color: var(--color-green);
+}
+
+/* Brief press feedback — the chevron is a one-shot "Start Watching"
+   trigger now, not a toggle, so there's no persistent expanded state. */
+.watchlist-split-card__chevron-button:active {
+  transform: scale(0.92);
+  background-color: rgba(0, 224, 84, 0.18);
+  border-color: var(--color-green);
+  color: var(--color-green);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   6. EMPTY STATE
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.watchlist-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-16) var(--space-8);
+  gap: var(--space-3);
+  text-align: center;
+  background-color: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.watchlist-empty-state__heading {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-dim);
+  margin: 0;
+}
+
+.watchlist-empty-state__sub {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin: 0;
+  max-width: 280px;
+  line-height: var(--line-height-normal);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   7. RESPONSIVE
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .user-watchlist-page {
+    padding: var(--space-6) var(--space-4) var(--space-10);
+    gap: var(--space-4);
+  }
+
+  .watchlist-media-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
+
+  .watchlist-split-card {
+    height: 116px;
+  }
+
+  .watchlist-poster-side {
+    flex: 0 0 72px;
+    width: 72px;
+  }
+}
+
+@media (max-width: 480px) {
+  .watchlist-info-side {
+    padding: var(--space-2);
+  }
+
+  .watchlist-info-side__rating {
+    display: none;     /* protect title space on very narrow phones */
+  }
+}

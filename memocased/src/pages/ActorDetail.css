@@ -1,0 +1,80 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   ActorDetail.css
+   Step 1: page frame, header typography, Letterboxd-style media gallery grid.
+   No utility framework — custom scoped classes only.
+
+   Color values reference this app's genuinely global tokens (defined once,
+   app-wide, in src/index.css — --color-text-dim, --color-green, etc.) rather
+   than redeclaring a second, page-local :root block. A literal fallback
+   value is included on every var() so this page still renders correctly
+   even if index.css somehow isn't loaded for any reason.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   1. PAGE FRAME
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.actor-page-container {
+  max-width: 1050px;
+  margin: 40px auto;
+  padding: 0 20px;
+
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 50px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   2. HEADER TYPOGRAPHY
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.actor-page-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 700;
+  color: var(--color-text-dim, #9ab);
+  margin: 0 0 8px;
+}
+
+.actor-page-name {
+  font-weight: 700;
+  font-size: 2.2rem;
+  letter-spacing: -0.01em; /* sharp, slightly tightened tracking */
+  color: var(--color-white, #ffffff);
+  margin: 0 0 30px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   3. LETTERBOXD-STYLE MEDIA GALLERY GRID
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.actor-shows-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 16px 14px;
+}
+
+/* ── Poster anchor — the <Link> wrapping each poster ── */
+
+.actor-shows-grid__item {
+  display: block;
+  width: 100%;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+/* ── Poster image ── */
+
+.actor-shows-grid__item img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.actor-shows-grid__item:hover img {
+  transform: scale(1.04);
+  border-color: rgba(255, 255, 255, 0.3); /* brightened, semi-transparent white */
+}

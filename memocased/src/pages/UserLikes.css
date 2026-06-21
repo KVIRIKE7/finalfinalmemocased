@@ -1,0 +1,208 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   UserLikes.css
+   All rules scoped to .user-likes-page, .likes-*, and .like-card-wrapper
+   descendants. Re-uses .profile-tabs from the shared sub-tab bar — defined
+   elsewhere (UserDiary.css), not duplicated here, so no risk of conflicting
+   with global navigation blocks.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   1. PAGE SHELL
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.user-likes-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
+  background-color: var(--color-bg);
+  padding: var(--space-8) var(--space-6) var(--space-16);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+/* ── Page header ── */
+
+.user-likes-page__header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding-top: var(--space-2);
+}
+
+.user-likes-page__heading {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.user-likes-page__count {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   2. MULTI-COLUMN POSTER GRID
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.likes-media-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--space-4);
+}
+
+.likes-media-grid__item {
+  min-width: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   3. CARD WRAPPER & POSTER GEOMETRY
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.like-card-wrapper {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+}
+
+/* ── Poster link/frame ── */
+
+.like-card-wrapper__poster-link {
+  display: block;
+  border-radius: 4px;
+  overflow: hidden;
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.like-card-wrapper__poster-link:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.like-card-wrapper__poster {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  object-position: center top;
+  border-radius: 4px;
+  border: 1px solid #2c3440;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   4. UNDER-POSTER MICRO-META ROW
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.like-card-wrapper__meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--space-2);    /* 8px — within the 6-8px spec range */
+  gap: var(--space-2);
+}
+
+/* ── Left side: stars + heart ── */
+
+.like-card-wrapper__meta-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.like-card-wrapper__stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  color: var(--color-green);       /* signature emerald, per spec */
+  font-size: 11px;
+  line-height: 1;
+}
+
+.like-card-wrapper__heart {
+  font-size: 12px;
+  color: #ff3b5c;                  /* vivid crimson-red, per spec */
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* ── Right side: compressed date ── */
+
+.like-card-wrapper__date {
+  font-size: 11px;
+  color: #789;
+  line-height: 1;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   5. EMPTY STATE
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.likes-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-16) var(--space-8);
+  gap: var(--space-3);
+  text-align: center;
+  background-color: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.likes-empty-state__heading {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-dim);
+  margin: 0;
+}
+
+.likes-empty-state__sub {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin: 0;
+  max-width: 280px;
+  line-height: var(--line-height-normal);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   6. RESPONSIVE
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .likes-media-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .user-likes-page {
+    padding: var(--space-6) var(--space-4) var(--space-10);
+    gap: var(--space-4);
+  }
+
+  .likes-media-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-3);
+  }
+}
+
+@media (max-width: 480px) {
+  .likes-media-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-2);
+  }
+
+  .like-card-wrapper__stars {
+    font-size: 10px;
+  }
+
+  .like-card-wrapper__date {
+    font-size: 10px;
+  }
+}

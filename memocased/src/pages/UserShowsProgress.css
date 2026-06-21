@@ -1,0 +1,398 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   UserShowsProgress.css
+   All rules scoped to .shows-progress-page and .progress-* descendants.
+   Re-uses .profile-tabs from UserProfile.css for the shared sub-tab bar.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   1. PAGE SHELL
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.shows-progress-page {
+  max-width: 1060px;
+  margin: 0 auto;
+  width: 100%;
+  background-color: var(--color-bg);
+  padding: 0 var(--space-6) var(--space-16);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   2. PAGE HEADER — "Progress" title + mode toggle group
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.shows-progress-page__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+  padding-top: var(--space-6);
+}
+
+.shows-progress-page__heading {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  margin: 0;
+  letter-spacing: -0.01em;
+  flex-shrink: 0;
+}
+
+/* ── Mode toggle button group ── */
+
+.shows-progress-page__mode-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.shows-progress-page__mode-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  color: var(--color-text-dim);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.shows-progress-page__mode-btn:hover {
+  background-color: var(--color-surface-raise);
+  border-color: var(--color-text-dim);
+  color: var(--color-text);
+  transform: translateY(-1px);
+}
+
+/* Active state — vibrant green accent */
+.shows-progress-page__mode-btn--active {
+  background-color: var(--color-green);
+  border-color: var(--color-green);
+  color: var(--color-black);
+  font-weight: var(--font-weight-semibold);
+  box-shadow: 0 0 10px rgba(0, 224, 84, 0.25);
+}
+
+.shows-progress-page__mode-btn--active:hover {
+  background-color: var(--color-green-dim);
+  border-color: var(--color-green-dim);
+  color: var(--color-black);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-green);
+}
+
+.shows-progress-page__mode-icon {
+  font-size: var(--font-size-xs);
+  line-height: 1;
+}
+
+.shows-progress-page__mode-label {
+  line-height: 1;
+}
+
+/* Count badge inside the button */
+.shows-progress-page__mode-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 var(--space-1);
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+}
+
+.shows-progress-page__mode-btn--active .shows-progress-page__mode-count {
+  background-color: rgba(0, 0, 0, 0.25);
+  color: var(--color-black);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   3. RESULTS SECTION
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.shows-progress-page__results {
+  min-height: 200px;
+}
+
+/* ── Responsive split-card grid ── */
+
+.progress-media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-5);
+}
+
+.progress-media-grid__item {
+  min-width: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   4. PROGRESS SPLIT CARD
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.progress-split-card {
+  display: flex;
+  flex-direction: row;
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform var(--transition-base),
+    box-shadow var(--transition-base),
+    border-color var(--transition-fast);
+  height: 140px;            /* fixed card height — poster and info panel match */
+}
+
+.progress-split-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-text-muted);
+}
+
+/* ── Left column: 2:3 poster ── */
+
+.progress-split-card__poster-col {
+  flex: 0 0 auto;
+  width: 94px;              /* 94px wide × 140px tall ≈ 2:3 ratio             */
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-surface-raise);
+  flex-shrink: 0;
+}
+
+.progress-split-card__poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+  transition: transform var(--transition-slow);
+}
+
+.progress-split-card:hover .progress-split-card__poster {
+  transform: scale(1.04);
+}
+
+/* ── Right column: metadata panel ── */
+
+.progress-split-card__info-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--space-3);
+  background-color: #1d242a;
+  overflow: hidden;
+}
+
+/* Text group: title + genres */
+
+.progress-split-card__text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow: hidden;
+}
+
+.progress-split-card__title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  line-height: var(--line-height-tight);
+  transition: color var(--transition-fast);
+}
+
+.progress-split-card:hover .progress-split-card__title {
+  color: var(--color-green);
+}
+
+.progress-split-card__genres {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  line-height: var(--line-height-snug);
+}
+
+/* Footer: episode count (left) + percentage badge (right) */
+
+.progress-split-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.progress-split-card__episode-count {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-dim);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.progress-split-card__episode-sep {
+  color: var(--color-text-muted);
+  margin: 0 1px;
+}
+
+.progress-split-card__episode-unit {
+  color: var(--color-text-muted);
+}
+
+/* Percentage badge — positioned bottom-right of the info panel */
+
+.progress-split-card__percent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+/* Percentage tint variants */
+
+.progress-split-card__percent--complete {
+  background-color: rgba(0, 224, 84, 0.18);
+  color: var(--color-green);
+}
+
+.progress-split-card__percent--high {
+  background-color: rgba(0, 224, 84, 0.10);
+  color: #5de87a;
+}
+
+.progress-split-card__percent--mid {
+  background-color: rgba(234, 179, 8, 0.12);
+  color: #f0c040;
+}
+
+.progress-split-card__percent--low {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--color-text-muted);
+}
+
+/* Mini progress bar at the bottom of the info panel */
+
+.progress-split-card__bar-track {
+  width: 100%;
+  height: 3px;
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.progress-split-card__bar-fill {
+  height: 100%;
+  background-color: var(--color-green);
+  border-radius: var(--radius-full);
+  transition: width 400ms ease;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   5. EMPTY STATE
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.progress-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-16) var(--space-8);
+  gap: var(--space-3);
+  text-align: center;
+  background-color: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.progress-empty-state__heading {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-dim);
+  margin: 0;
+}
+
+.progress-empty-state__sub {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin: 0;
+  max-width: 280px;
+  line-height: var(--line-height-normal);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   6. RESPONSIVE
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .shows-progress-page {
+    padding: 0 var(--space-4) var(--space-10);
+    gap: var(--space-4);
+  }
+
+  .shows-progress-page__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  .progress-media-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
+
+  .progress-split-card {
+    height: 120px;
+  }
+
+  .progress-split-card__poster-col {
+    width: 80px;
+  }
+}
+
+@media (max-width: 480px) {
+  .shows-progress-page__mode-group {
+    width: 100%;
+  }
+
+  .shows-progress-page__mode-btn {
+    flex: 1;
+    justify-content: center;
+  }
+}

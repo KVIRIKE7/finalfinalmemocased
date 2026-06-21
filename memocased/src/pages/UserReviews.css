@@ -1,0 +1,285 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   UserReviews.css
+   All rules scoped to .user-reviews-page, .review-feed-item, .reviews-* and
+   .review-* descendants. Re-uses .profile-tabs from the shared sub-tab bar.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   1. PAGE SHELL
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.user-reviews-page {
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+  background-color: var(--color-bg);
+  padding: var(--space-8) var(--space-6) var(--space-16);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+/* ── Page header ── */
+
+.user-reviews-page__header {
+  padding-top: var(--space-2);
+}
+
+.user-reviews-page__heading {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   2. FEED CONTAINER
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.reviews-feed-container {
+  display: flex;
+  flex-direction: column;
+  background-color: transparent;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   3. REVIEW FEED ITEM — the individual card row
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.review-feed-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-5);
+  padding-bottom: var(--space-6);
+  margin-bottom: var(--space-6);
+  border-bottom: 1px solid #1e2733;     /* thin blue-tinted divider, matches diary */
+}
+
+.review-feed-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   4. LEFT: POSTER FRAME
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.review-feed-item__poster-col {
+  flex: 0 0 76px;
+  width: 76px;
+}
+
+.review-feed-item__poster-link {
+  display: block;
+  border-radius: 4px;
+  overflow: hidden;
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.review-feed-item__poster-link:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.review-feed-item__poster {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  object-position: center top;
+  border-radius: 4px;
+  border: 1px solid var(--color-border);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   5. RIGHT: METADATA STACK
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.review-feed-item__body-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* ── Row 1: show header ── */
+
+.review-feed-item__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px;
+  margin: 0;
+  line-height: var(--line-height-tight);
+}
+
+.review-feed-item__title-link {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.review-feed-item__title-link:hover {
+  color: var(--color-green);
+}
+
+.review-feed-item__season-suffix {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: #789;
+}
+
+.review-feed-item__year {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  color: #789;
+}
+
+/* ── Row 2: log status line — stars + watched date ── */
+
+.review-feed-item__status-line {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.review-feed-item__stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  color: var(--color-green);       /* signature green accent, per spec */
+  font-size: var(--font-size-sm);
+  line-height: 1;
+}
+
+.review-feed-item__watched-text {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
+  color: #9ab;
+  line-height: 1;
+}
+
+/* ── Row 3: review narrative body ── */
+
+.review-body-content {
+  color: #cdd;
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+  margin: 12px 0;
+  max-width: 640px;          /* caps line length for readability */
+}
+
+/* ── Row 4: footer engagement line ── */
+
+.review-feed-item__footer {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.review-feed-item__like-icon {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  line-height: 1;
+  transition: color var(--transition-fast), transform var(--transition-fast);
+}
+
+.review-feed-item__like-count {
+  font-size: 10px;
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--color-text-muted);
+  transition: color var(--transition-fast);
+}
+
+/* Hover state — both icon and label brighten together */
+.review-feed-item__footer:hover .review-feed-item__like-icon {
+  color: #ff3b5c;
+  transform: scale(1.1);
+}
+
+.review-feed-item__footer:hover .review-feed-item__like-count {
+  color: var(--color-text-dim);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   6. EMPTY STATE
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.reviews-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-16) var(--space-8);
+  gap: var(--space-3);
+  text-align: center;
+  background-color: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.reviews-empty-state__heading {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-dim);
+  margin: 0;
+}
+
+.reviews-empty-state__sub {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin: 0;
+  max-width: 320px;
+  line-height: var(--line-height-normal);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   7. RESPONSIVE
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .user-reviews-page {
+    padding: var(--space-6) var(--space-4) var(--space-10);
+    gap: var(--space-4);
+  }
+
+  .review-feed-item {
+    gap: var(--space-3);
+    padding-bottom: var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+
+  .review-feed-item__poster-col {
+    flex: 0 0 56px;
+    width: 56px;
+  }
+
+  .review-feed-item__title-link {
+    font-size: var(--font-size-sm);
+  }
+
+  .review-body-content {
+    font-size: var(--font-size-xs);
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .review-feed-item__header {
+    gap: 2px;
+  }
+
+  .review-feed-item__status-line {
+    flex-wrap: wrap;
+    gap: var(--space-1);
+  }
+}
