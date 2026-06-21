@@ -1,0 +1,590 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   LogModal.css
+   Styles for both phases of the log modal:
+     Phase 1 — log-modal__search-panel   (search for a show)
+     Phase 2 — log-modal__details-panel  (fill in log details)
+   All rules scoped to .log-modal__ — zero global leakage.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   1. BACKDROP OVERLAY
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.log-modal__overlay {
+  position: fixed;
+  inset: 0;                                   /* top/right/bottom/left: 0      */
+  z-index: 1000;
+  background: rgba(20, 24, 28, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);                     /* keeps modal off viewport edge */
+  animation: fadeIn 160ms ease both;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   2. MODAL CONTAINER
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.log-modal__container {
+  position: relative;
+  width: 90%;
+  max-width: 560px;
+  background-color: var(--color-surface);     /* #1d242a                       */
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);            /* 6px                           */
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.6),
+    0 2px 8px  rgba(0, 0, 0, 0.4);
+  overflow: hidden;                           /* clips children to border-radius */
+  animation: slideUp 200ms ease both;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   3. SHARED HEADER (both phases)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.log-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Phase 2 has a left group: back button + title */
+.log-modal__header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.log-modal__header-title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+/* ── Close button (top-right X) ── */
+
+.log-modal__close-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.log-modal__close-button:hover {
+  color: var(--color-text);
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* ── Back button (Phase 2 only) ── */
+
+.log-modal__back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.log-modal__back-button:hover {
+  color: var(--color-text);
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   4. PHASE 1 — SEARCH PANEL
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.log-modal__search-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Search input wrapper ── */
+
+.log-modal__search-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+  background-color: var(--color-bg);
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--transition-base);
+}
+
+.log-modal__search-input-wrapper:focus-within {
+  border-bottom-color: var(--color-green);
+}
+
+.log-modal__search-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  transition: color var(--transition-fast);
+}
+
+.log-modal__search-input-wrapper:focus-within .log-modal__search-icon {
+  color: var(--color-green);
+}
+
+.log-modal__search-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--color-text);
+  font-size: var(--font-size-lg);          /* large, comfortable to type in    */
+  font-weight: var(--font-weight-regular);
+  caret-color: var(--color-green);
+  min-width: 0;
+}
+
+.log-modal__search-input::placeholder {
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-regular);
+}
+
+/* Spinner — shown while TMDB is fetching */
+
+.log-modal__search-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-green);
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: spin 0.7s linear infinite;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   5. RESULTS DROPDOWN LIST
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.log-modal__results-list {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-1) 0;
+  max-height: 260px;
+  overflow-y: auto;
+  border-top: 1px solid var(--color-border);
+
+  /* Subtle fade at bottom to signal more items */
+  -webkit-mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
+          mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
+}
+
+/* Custom scrollbar inside results list */
+.log-modal__results-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.log-modal__results-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.log-modal__results-list::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+}
+
+/* ── Individual result item ── */
+
+.log-modal__result-item {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-5);
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.log-modal__result-item:hover {
+  background-color: var(--color-surface-raise);
+}
+
+/* ── Highlighted state (keyboard ↑↓ and mouse hover share same class) ── */
+
+.log-modal__result-item--highlighted {
+  background-color: var(--color-green) !important;
+}
+
+.log-modal__result-item--highlighted .log-modal__result-title {
+  color: var(--color-black);
+}
+
+.log-modal__result-item--highlighted .log-modal__result-year {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+/* ── Result text pieces ── */
+
+.log-modal__result-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+  transition: color var(--transition-fast);
+}
+
+.log-modal__result-year {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  transition: color var(--transition-fast);
+}
+
+/* ── Empty / no results state ── */
+
+.log-modal__no-results {
+  padding: var(--space-5) var(--space-5);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  text-align: center;
+  border-top: 1px solid var(--color-border);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   6. PHASE 2 — DETAILS PANEL
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.log-modal__details-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.log-modal__details-body {
+  display: flex;
+  gap: var(--space-5);
+  padding: var(--space-5);
+}
+
+/* ── Poster column ── */
+
+.log-modal__poster-column {
+  flex-shrink: 0;
+  width: 100px;
+}
+
+.log-modal__poster-image {
+  width: 100%;
+  border-radius: var(--radius-sm);
+  display: block;
+  border: 1px solid var(--color-border);
+}
+
+.log-modal__poster-placeholder {
+  width: 100px;
+  aspect-ratio: 2 / 3;
+  background-color: var(--color-surface-raise);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+}
+
+/* ── Form column ── */
+
+.log-modal__form-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+/* Show title + year */
+
+.log-modal__show-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.log-modal__show-title {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin: 0;
+  line-height: var(--line-height-tight);
+}
+
+.log-modal__show-year {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* ── Form field group ── */
+
+.log-modal__field-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.log-modal__label {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+/* Inline label variant (for checkbox + text on same row) */
+.log-modal__label--inline {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+}
+
+/* ── Season select ── */
+
+.log-modal__select {
+  appearance: none;
+  background-color: var(--color-bg);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%239aabb8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--space-3) center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  padding: var(--space-2) var(--space-8) var(--space-2) var(--space-3);
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.log-modal__select:focus {
+  outline: none;
+  border-color: var(--color-green);
+}
+
+/* ── Checkbox ── */
+
+.log-modal__checkbox {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--color-green);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* ── Date input ── */
+
+.log-modal__date-input {
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.log-modal__date-input:focus {
+  outline: none;
+  border-color: var(--color-green);
+}
+
+.log-modal__date-input::-webkit-calendar-picker-indicator {
+  filter: invert(0.5);
+  cursor: pointer;
+}
+
+/* ── Review textarea ── */
+
+.log-modal__textarea {
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+  padding: var(--space-2) var(--space-3);
+  resize: vertical;
+  min-height: 80px;
+  transition: border-color var(--transition-fast);
+}
+
+.log-modal__textarea:focus {
+  outline: none;
+  border-color: var(--color-green);
+}
+
+.log-modal__textarea::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   7. RATING ROW (stars + heart)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.log-modal__rating-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ── Star rating ── */
+
+.star-rating {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.star-rating__star {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  border-radius: var(--radius-sm);
+  transition:
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.star-rating__star:hover {
+  transform: scale(1.15);
+}
+
+.star-rating__star--filled {
+  color: var(--color-green);
+}
+
+/* ── Like / heart button ── */
+
+.log-modal__like-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: var(--space-1);
+  cursor: pointer;
+  color: var(--color-text-muted);
+  border-radius: var(--radius-sm);
+  transition:
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.log-modal__like-button:hover {
+  color: #e05;                               /* deep pink — heart not yet liked */
+  transform: scale(1.1);
+}
+
+.log-modal__like-button--liked {
+  color: #e05;
+}
+
+.log-modal__like-button--liked:hover {
+  transform: scale(1.15);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   8. SAVE BUTTON
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.log-modal__save-button {
+  align-self: flex-end;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2) var(--space-6);
+  background-color: var(--color-green);
+  color: var(--color-black);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-wide);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.log-modal__save-button:hover {
+  background-color: var(--color-green-dim);
+  box-shadow: var(--shadow-green);
+}
+
+.log-modal__save-button:active {
+  transform: translateY(1px);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   9. RESPONSIVE
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .log-modal__container {
+    width: 100%;
+    max-width: 100%;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+
+  .log-modal__overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .log-modal__details-body {
+    flex-direction: column;
+  }
+
+  .log-modal__poster-column {
+    width: 80px;
+  }
+
+  .log-modal__search-input {
+    font-size: var(--font-size-base);
+  }
+}
