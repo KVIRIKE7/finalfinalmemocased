@@ -1,0 +1,436 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   Navbar.css
+   All rules scoped to .navbar — zero global leakage.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   1. SHELL
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  height: var(--navbar-height); /* 56px from index.css */
+  background-color: var(--color-bg);
+  border-bottom: 1px solid #2c2c2c;
+}
+
+.navbar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: 0 var(--space-6);
+  gap: var(--space-4);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   2. LEFT — LOGO + NAV LINKS
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.navbar__left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  flex-shrink: 0;
+}
+
+/* ── Logo ── */
+
+.navbar__logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.navbar__logo-wordmark {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-green);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  transition: opacity var(--transition-fast);
+}
+
+.navbar__logo:hover .navbar__logo-wordmark {
+  opacity: 0.85;
+}
+
+/* ── Nav links ── */
+
+.navbar__nav-links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar__nav-link {
+  display: inline-block;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--color-text-dim);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.navbar__nav-link:hover {
+  color: var(--color-text);
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Active route — React Router adds .active via NavLink */
+.navbar__nav-link.active {
+  color: var(--color-text);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   3. RIGHT — ACTIONS
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.navbar__right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+/* ── Search toggle icon button ── */
+
+.navbar__icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-dim);
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.navbar__icon-button:hover {
+  color: var(--color-text);
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.navbar__icon-button--active {
+  color: var(--color-text);
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* ── + LOG button — extends .green-btn utility ── */
+
+.navbar__log-button {
+  /* Extend the .green-btn utility defined in index.css */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  background-color: var(--color-green);
+  color: var(--color-black);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-wide);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 5px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.navbar__log-button:hover {
+  background-color: var(--color-green-dim);
+  box-shadow: var(--shadow-green);
+}
+
+.navbar__log-button:active {
+  transform: translateY(1px);
+  background-color: var(--color-green-dim);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   4. INLINE SEARCH FIELD
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.navbar__search-field {
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 260px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  transition: border-color var(--transition-base), width var(--transition-base);
+  animation: slideDown 160ms ease both;
+}
+
+.navbar__search-field:focus-within {
+  border-color: var(--color-green);
+}
+
+.navbar__search-field-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0 var(--space-2) 0 var(--space-3);
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.navbar__search-input {
+  flex: 1;
+  height: 34px;
+  padding: 0 var(--space-2);
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  caret-color: var(--color-green);
+  min-width: 0; /* prevent flex overflow */
+}
+
+.navbar__search-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* Remove default webkit search clear button */
+.navbar__search-input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.navbar__search-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-left: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.navbar__search-submit:hover {
+  color: var(--color-green);
+  background-color: rgba(0, 224, 84, 0.08);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   5. PROFILE TRIGGER (PFP + USERNAME + CARET)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.navbar__profile-wrapper {
+  position: relative;
+}
+
+.navbar__profile-trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.navbar__profile-trigger:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+/* ── Avatar: image variant ── */
+
+.navbar__avatar-image {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  border: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+/* ── Avatar: initials fallback ── */
+
+.navbar__avatar-initials {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: var(--color-surface-raise);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-dim);
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+/* ── Username ── */
+
+.navbar__profile-username {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+/* ── Caret arrow ── */
+
+.navbar__profile-caret {
+  color: var(--color-text-dim);
+  flex-shrink: 0;
+  transition: transform var(--transition-base), color var(--transition-fast);
+}
+
+.navbar__profile-caret--open {
+  transform: rotate(180deg);
+  color: var(--color-text);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   6. PROFILE DROPDOWN MENU
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.navbar__profile-dropdown {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  min-width: 180px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 300;
+  overflow: hidden;
+
+  /* Entry animation */
+  animation: slideDown 160ms ease both;
+}
+
+/* ── Dropdown header (display name + @username) ── */
+
+.navbar__profile-dropdown-header {
+  padding: var(--space-3) var(--space-4);
+}
+
+.navbar__profile-dropdown-name {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  line-height: var(--line-height-tight);
+  margin: 0;
+}
+
+.navbar__profile-dropdown-username {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin: 2px 0 0;
+  line-height: 1;
+}
+
+/* ── Divider ── */
+
+.navbar__profile-dropdown-divider {
+  height: 1px;
+  background-color: var(--color-border);
+  margin: 0;
+}
+
+/* ── Menu items: shared (both <a> and <button>) ── */
+
+.navbar__profile-dropdown-item {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-dim);
+  text-decoration: none;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast);
+  white-space: nowrap;
+}
+
+.navbar__profile-dropdown-item:hover {
+  color: var(--color-text);
+  background-color: #2c343a;
+}
+
+/* ── Sign Out — distinct red-tinted color on hover ── */
+
+.navbar__profile-dropdown-item--signout {
+  color: var(--color-text-muted);
+}
+
+.navbar__profile-dropdown-item--signout:hover {
+  color: var(--color-error);
+  background-color: var(--color-error-bg);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   7. RESPONSIVE
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .navbar__inner {
+    padding: 0 var(--space-4);
+    gap: var(--space-2);
+  }
+
+  /* Hide username text on small screens — keep avatar + caret */
+  .navbar__profile-username {
+    display: none;
+  }
+
+  /* Tighten the search field */
+  .navbar__search-field {
+    width: 180px;
+  }
+
+  /* Hide nav links on very small screens */
+  .navbar__nav-links {
+    display: none;
+  }
+}
