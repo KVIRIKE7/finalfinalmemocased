@@ -5,7 +5,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import React, { useState } from "react";
-import { useParams, NavLink, Navigate } from "react-router-dom";
+import { useParams, Navigate } from "react-router-dom";
+import { ProfileShell } from "../components/layout/ProfileShell";
 import { LogModal, type EditableLogEntry } from "../components/LogModal";
 import { useDiary, type DiaryLogEntry } from "../store/DiaryContext";
 import type { LogEntry } from "../types/navbar";
@@ -19,16 +20,6 @@ import "./UserDiary.css";
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Sub-tab link definitions — mirrors UserProfile.tsx / UserShowsProgress.tsx
-function buildProfileTabs(username: string) {
-  return [
-    { label: "Profile",   to: `/${username}` },
-    { label: "Shows",     to: `/${username}/shows` },
-    { label: "Diary",     to: `/${username}/diary` },
-    { label: "Reviews",   to: `/${username}/reviews` },
-    { label: "Watchlist", to: `/${username}/watchlist` },
-    { label: "Likes",     to: `/${username}/likes` },
-  ];
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DATE HELPERS
@@ -218,7 +209,6 @@ export default function UserDiary(): React.ReactElement {
   // here immediately, because both components read the identical state.
   const { diaryLogs, updateLogEntry } = useDiary();
 
-  const tabs = buildProfileTabs(username);
 
   // ── Review modal state (read-only quote viewer) ───────────────────────────
   const [activeReviewText, setActiveReviewText] = useState<string | null>(null);
@@ -290,30 +280,7 @@ export default function UserDiary(): React.ReactElement {
   }
 
   return (
-    <div className="user-diary-page">
-
-      {/* ════════════════════════════════════════════
-          SHARED PROFILE SUB-TAB NAV
-      ════════════════════════════════════════════ */}
-      <nav className="profile-tabs" aria-label="Profile sections">
-        <ul className="profile-tabs__list" role="list">
-          {tabs.map((tab) => (
-            <li key={tab.to} className="profile-tabs__item" role="listitem">
-              <NavLink
-                to={tab.to}
-                end
-                className={({ isActive }) =>
-                  ["profile-tabs__link", isActive ? "profile-tabs__link--active" : ""]
-                    .filter(Boolean)
-                    .join(" ")
-                }
-              >
-                {tab.label}
-              </NavLink>
-            </li>
-          ))}
-        </ul>
-      </nav>
+    <ProfileShell username={username}>
 
       {/* ════════════════════════════════════════════
           PAGE HEADER
@@ -417,6 +384,6 @@ export default function UserDiary(): React.ReactElement {
           editingEntry={toEditableLogEntry(selectedLogToEdit)}
         />
       )}
-    </div>
+    </ProfileShell>
   );
 }

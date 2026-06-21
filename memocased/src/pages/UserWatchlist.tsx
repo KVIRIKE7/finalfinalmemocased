@@ -5,7 +5,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import React from "react";
-import { useParams, NavLink, Navigate } from "react-router-dom";
+import { useParams, Navigate } from "react-router-dom";
+import { ProfileShell } from "../components/layout/ProfileShell";
 import { useWatchlist, type WatchlistShowEntry } from "../store/WatchlistContext";
 import "./UserWatchlist.css";
 
@@ -19,16 +20,6 @@ import "./UserWatchlist.css";
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Sub-tab link definitions — mirrors UserProfile.tsx / UserDiary.tsx
-function buildProfileTabs(username: string) {
-  return [
-    { label: "Profile",   to: `/${username}` },
-    { label: "Shows",     to: `/${username}/shows` },
-    { label: "Diary",     to: `/${username}/diary` },
-    { label: "Reviews",   to: `/${username}/reviews` },
-    { label: "Watchlist", to: `/${username}/watchlist` },
-    { label: "Likes",     to: `/${username}/likes` },
-  ];
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUB-COMPONENTS
@@ -181,33 +172,9 @@ export default function UserWatchlist(): React.ReactElement {
   // on the next render with zero extra wiring.
   const { watchlist, handleStartWatching } = useWatchlist();
 
-  const tabs = buildProfileTabs(username);
 
   return (
-    <div className="user-watchlist-page">
-
-      {/* ════════════════════════════════════════════
-          SHARED PROFILE SUB-TAB NAV
-      ════════════════════════════════════════════ */}
-      <nav className="profile-tabs" aria-label="Profile sections">
-        <ul className="profile-tabs__list" role="list">
-          {tabs.map((tab) => (
-            <li key={tab.to} className="profile-tabs__item" role="listitem">
-              <NavLink
-                to={tab.to}
-                end
-                className={({ isActive }) =>
-                  ["profile-tabs__link", isActive ? "profile-tabs__link--active" : ""]
-                    .filter(Boolean)
-                    .join(" ")
-                }
-              >
-                {tab.label}
-              </NavLink>
-            </li>
-          ))}
-        </ul>
-      </nav>
+    <ProfileShell username={username}>
 
       {/* ════════════════════════════════════════════
           PAGE HEADER
@@ -241,6 +208,6 @@ export default function UserWatchlist(): React.ReactElement {
           ))}
         </div>
       )}
-    </div>
+    </ProfileShell>
   );
 }

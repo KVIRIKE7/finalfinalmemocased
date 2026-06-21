@@ -4,7 +4,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import React, { useState } from "react";
-import { useParams, NavLink, Navigate, Link } from "react-router-dom";
+import { useParams, Navigate, Link } from "react-router-dom";
+import { ProfileShell } from "../components/layout/ProfileShell";
 import "./UserShowsProgress.css";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -56,16 +57,6 @@ const MODE_CONFIG: ModeConfig[] = [
 ];
 
 // Sub-tab link definitions — mirrors UserProfile.tsx pattern exactly
-function buildProfileTabs(username: string) {
-  return [
-    { label: "Profile",   to: `/${username}` },
-    { label: "Shows",     to: `/${username}/shows` },
-    { label: "Diary",     to: `/${username}/diary` },
-    { label: "Reviews",   to: `/${username}/reviews` },
-    { label: "Watchlist", to: `/${username}/watchlist` },
-    { label: "Likes",     to: `/${username}/likes` },
-  ];
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MOCK DATA
@@ -303,7 +294,6 @@ export default function UserShowsProgress(): React.ReactElement {
 
   const filtered = entries.filter((e) => e.status === currentMode);
 
-  const tabs = buildProfileTabs(username);
 
   // ── Derived counts for mode badge labels ─────────────────────────────────
 
@@ -311,30 +301,7 @@ export default function UserShowsProgress(): React.ReactElement {
     entries.filter((e) => e.status === mode).length;
 
   return (
-    <div className="shows-progress-page">
-
-      {/* ════════════════════════════════════════════
-          PROFILE SUB-TAB NAV (shared with UserProfile)
-      ════════════════════════════════════════════ */}
-      <nav className="profile-tabs" aria-label="Profile sections">
-        <ul className="profile-tabs__list" role="list">
-          {tabs.map((tab) => (
-            <li key={tab.to} className="profile-tabs__item" role="listitem">
-              <NavLink
-                to={tab.to}
-                end
-                className={({ isActive }) =>
-                  ["profile-tabs__link", isActive ? "profile-tabs__link--active" : ""]
-                    .filter(Boolean)
-                    .join(" ")
-                }
-              >
-                {tab.label}
-              </NavLink>
-            </li>
-          ))}
-        </ul>
-      </nav>
+    <ProfileShell username={username}>
 
       {/* ════════════════════════════════════════════
           PAGE HEADER: title + mode toggle group
@@ -404,6 +371,6 @@ export default function UserShowsProgress(): React.ReactElement {
           </div>
         )}
       </section>
-    </div>
+    </ProfileShell>
   );
 }
