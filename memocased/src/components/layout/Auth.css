@@ -1,0 +1,458 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   Auth.css
+   Styles for SignIn and SignUp — split-screen Trakt.tv-inspired layout.
+   All rules scoped to .auth-layout, .auth-form-wrapper, and their children.
+   Zero leakage into the main app shell.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   1. ROOT SPLIT-SCREEN CONTAINER
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.auth-layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background-color: var(--color-bg);
+  overflow: hidden;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   2. LEFT PANEL — DYNAMIC TMDB BACKDROP
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.auth-layout__backdrop {
+  position: relative;
+  flex: 0 0 60%;               /* fixed at 60%, doesn't shrink or grow        */
+  overflow: hidden;
+  background-color: #0a0d10;   /* dark placeholder before image loads          */
+}
+
+/* Full-fill backdrop image */
+.auth-layout__backdrop-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  animation: fadeIn 600ms ease both;
+}
+
+/* Skeleton shimmer while the image URL resolves */
+.auth-layout__backdrop-skeleton {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    #0d1117 25%,
+    #151c24 50%,
+    #0d1117 75%
+  );
+  background-size: 400px 100%;
+  animation: shimmer 1.6s ease infinite;
+}
+
+/* Right-edge gradient — fades backdrop into the panel seam */
+.auth-layout__backdrop-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    transparent 60%,
+    rgba(14, 18, 22, 0.5) 80%,
+    var(--color-surface) 100%
+  );
+  pointer-events: none;
+}
+
+/* Bottom attribution watermark */
+.auth-layout__backdrop-attribution {
+  position: absolute;
+  bottom: var(--space-5);
+  left: var(--space-6);
+  right: var(--space-6);
+  font-size: var(--font-size-xs);
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.02em;
+  margin: 0;
+  animation: fadeIn 800ms 400ms ease both; /* delayed — appears after image    */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.auth-layout__backdrop-attribution-label {
+  color: rgba(255, 255, 255, 0.3);
+  font-style: italic;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   3. RIGHT PANEL — FORM AREA
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.auth-layout__panel {
+  flex: 0 0 40%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-surface);
+  overflow-y: auto;             /* panel scrolls independently on short screens */
+}
+
+/* ── Panel header: logo left, toggle button right ── */
+
+.auth-layout__panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-5) var(--space-8);
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* ── Logo ── */
+
+.auth-layout__logo-link {
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+}
+
+.auth-layout__logo-wordmark {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-green);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  transition: opacity var(--transition-fast);
+}
+
+.auth-layout__logo-link:hover .auth-layout__logo-wordmark {
+  opacity: 0.8;
+}
+
+/* ── Toggle button: "Join Now" / "Sign In" ── */
+
+.auth-layout__toggle-button {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-dim);
+  text-decoration: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  letter-spacing: 0.01em;
+  transition:
+    color var(--transition-base),
+    border-color var(--transition-base),
+    background-color var(--transition-base);
+}
+
+.auth-layout__toggle-button:hover {
+  color: var(--color-text);
+  border-color: var(--color-text-dim);
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+/* ── Panel main: vertically centers the form ── */
+
+.auth-layout__panel-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-10) var(--space-8);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   4. FORM WRAPPER  (direct child of auth-layout__panel-main)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.auth-form-wrapper {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   5. FORM HEADING
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.auth-form-heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.auth-form-heading__title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  line-height: var(--line-height-tight);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.auth-form-heading__subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: var(--line-height-snug);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   6. FORM-LEVEL ERROR BANNER
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.auth-form-error-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-error-bg);
+  border: 1px solid rgba(224, 80, 80, 0.3);
+  border-radius: var(--radius-md);
+  animation: slideDown 200ms ease both;
+}
+
+.auth-form-error-banner__icon {
+  font-size: var(--font-size-base);
+  line-height: 1.4;
+  flex-shrink: 0;
+  color: var(--color-error);
+}
+
+.auth-form-error-banner__message {
+  font-size: var(--font-size-sm);
+  color: var(--color-error);
+  margin: 0;
+  line-height: var(--line-height-snug);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   7. FORM FIELDS
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ── Field group: label + input + optional error ── */
+
+.auth-form__field-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* ── Label ── */
+
+.auth-form__label {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+/* ── Input ── */
+
+.auth-form__input {
+  width: 100%;
+  height: 42px;
+  padding: 0 var(--space-3);
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+  outline: none;
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+  caret-color: var(--color-green);
+}
+
+.auth-form__input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.auth-form__input:focus {
+  border-color: var(--color-green);
+  box-shadow: 0 0 0 3px rgba(0, 224, 84, 0.12);
+}
+
+.auth-form__input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Error state — red border, stays red even when focused */
+.auth-form__input--error {
+  border-color: var(--color-error);
+}
+
+.auth-form__input--error:focus {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 3px rgba(224, 80, 80, 0.12);
+}
+
+/* ── Per-field validation message ── */
+
+.auth-form__field-error {
+  font-size: var(--font-size-xs);
+  color: var(--color-error);
+  margin: 0;
+  line-height: var(--line-height-snug);
+  animation: slideDown 160ms ease both;
+}
+
+/* ── Helper / hint text (password requirements etc.) ── */
+
+.auth-form__field-hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: var(--line-height-snug);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   8. SUBMIT BUTTON
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.auth-form__submit-button {
+  width: 100%;
+  height: 44px;
+  margin-top: var(--space-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-green);
+  color: var(--color-black);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-wide);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast),
+    opacity var(--transition-fast);
+}
+
+.auth-form__submit-button:hover:not(:disabled) {
+  background-color: var(--color-green-dim);
+  box-shadow: var(--shadow-green);
+}
+
+.auth-form__submit-button:active:not(:disabled) {
+  transform: translateY(1px);
+  background-color: var(--color-green-dim);
+}
+
+.auth-form__submit-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   9. FOOTER LINK
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.auth-form-footer {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  text-align: center;
+  margin: 0;
+  line-height: var(--line-height-snug);
+}
+
+.auth-form-footer__link {
+  color: var(--color-text-dim);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition:
+    color var(--transition-fast),
+    text-decoration-color var(--transition-fast);
+}
+
+.auth-form-footer__link:hover {
+  color: var(--color-green);
+  text-decoration-color: currentColor;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   10. RESPONSIVE
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Tablet: narrow the backdrop slightly */
+@media (max-width: 1024px) {
+  .auth-layout__backdrop {
+    flex: 0 0 50%;
+  }
+
+  .auth-layout__panel {
+    flex: 0 0 50%;
+  }
+}
+
+/* Mobile: hide backdrop entirely, panel takes full screen */
+@media (max-width: 768px) {
+  .auth-layout {
+    flex-direction: column;
+  }
+
+  .auth-layout__backdrop {
+    display: none;
+  }
+
+  .auth-layout__panel {
+    flex: 1;
+    min-height: 100vh;
+  }
+
+  .auth-layout__panel-header {
+    padding: var(--space-4) var(--space-5);
+  }
+
+  .auth-layout__panel-main {
+    padding: var(--space-8) var(--space-5);
+    justify-content: flex-start;
+    padding-top: var(--space-10);
+  }
+
+  .auth-form-wrapper {
+    max-width: 100%;
+  }
+
+  .auth-form-heading__title {
+    font-size: var(--font-size-lg);
+  }
+}
+
+/* Very small screens: tighten further */
+@media (max-width: 380px) {
+  .auth-layout__panel-header {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .auth-layout__panel-main {
+    padding: var(--space-6) var(--space-4);
+  }
+
+  .auth-layout__toggle-button {
+    padding: var(--space-1) var(--space-3);
+    font-size: var(--font-size-xs);
+  }
+}
