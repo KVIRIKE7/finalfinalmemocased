@@ -9,6 +9,7 @@ import App from "./App";
 import { UserProvider } from "./store/UserContext";
 import { DiaryProvider } from "./store/DiaryContext";
 import { WatchlistProvider } from "./store/WatchlistContext";
+import { AppProvider } from "./store/AppContext";
 import "./index.css";
 
 const rootElement = document.getElementById("root");
@@ -41,7 +42,9 @@ ReactDOM.createRoot(rootElement).render(
     <UserProvider>
       <DiaryProvider>
         <WatchlistProvider>
-          <App />
+          <AppProvider>
+            <App />
+          </AppProvider>
         </WatchlistProvider>
       </DiaryProvider>
     </UserProvider>
