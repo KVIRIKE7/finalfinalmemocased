@@ -7,6 +7,8 @@ import React, { useState } from "react";
 import { useParams, Link, NavLink, Navigate } from "react-router-dom";
 import { getPosterUrl } from "../utils/tmdbImage";
 import { useUser } from "../store/UserContext";
+import { useDiary } from "../store/DiaryContext";
+import { useWatchlist } from "../store/WatchlistContext";
 import "./UserProfile.css";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -35,43 +37,6 @@ interface ProfileTab {
 // ─────────────────────────────────────────────────────────────────────────────
 // MOCK DATA
 // Replace posterPath values with real TMDB paths as the data layer grows.
-// ─────────────────────────────────────────────────────────────────────────────
-
-const MOCK_FAVORITES: FavoriteShow[] = [
-  {
-    showId: 1396,
-    title: "Breaking Bad",
-    posterPath: "/ggFHVNu6YYI5L9pCfOacjizRGt.jpg",
-    releaseYear: "2008",
-  },
-  {
-    showId: 1399,
-    title: "Game of Thrones",
-    posterPath: "/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg",
-    releaseYear: "2011",
-  },
-  {
-    showId: 66732,
-    title: "Stranger Things",
-    posterPath: "/49WJfeN0moxb9IPfGn8AIqMGskD.jpg",
-    releaseYear: "2016",
-  },
-  {
-    showId: 136315,
-    title: "The Bear",
-    posterPath: "/4fVddnbhcmzRZE14NJY03GKS6Fn.jpg",
-    releaseYear: "2022",
-  },
-];
-
-// Mock stats — wire to real state arrays (progress[], completedShows[], etc.)
-// once a global store is in place. Counts are illustrative for now.
-const MOCK_STATS: ProfileStats = {
-  showsCompleted:    12,
-  currentlyWatching:  4,
-  dropped:            2,
-};
-
 // ─────────────────────────────────────────────────────────────────────────────
 // SUB-COMPONENTS
 // ─────────────────────────────────────────────────────────────────────────────
@@ -222,15 +187,19 @@ export default function UserProfile(): React.ReactElement {
   // Determine if the viewer is looking at their own profile
   const isOwnProfile = currentUser?.username === username;
 
-  // Favorites state — 4 slots; pad with null if fewer than 4 are set
-  const [favorites] = useState<(FavoriteShow | null)[]>(() => {
-    const padded: (FavoriteShow | null)[] = [...MOCK_FAVORITES];
-    while (padded.length < 4) padded.push(null);
-    return padded.slice(0, 4); // enforce exactly 4 slots
-  });
+  // Real data from context
+  const { diaryLogs }        = useDiary();
+  const { currentlyWatching } = useWatchlist();
 
-  // Stats — wire to real global state arrays once a store exists
-  const stats: ProfileStats = MOCK_STATS;
+  // Favorites — empty slots until user sets them (Supabase integration pending)
+  const [favorites] = useState<(FavoriteShow | null)[]>([null, null, null, null]);
+
+  // Stats derived from real context data
+  const stats: ProfileStats = {
+    showsCompleted:    diaryLogs.filter((l) => l.rating > 0).length,
+    currentlyWatching: currentlyWatching.length,
+    dropped:           0,
+  };
 
   // ── Sub-tab definitions ───────────────────────────────────────────────────
 

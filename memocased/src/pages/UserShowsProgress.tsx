@@ -3,9 +3,11 @@
 // Progress tracking view: Completed · Watching · Dropped
 // ─────────────────────────────────────────────────────────────────────────────
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useParams, Navigate, Link } from "react-router-dom";
 import { ProfileShell } from "../components/layout/ProfileShell";
+import { useDiary } from "../store/DiaryContext";
+import { useWatchlist } from "../store/WatchlistContext";
 import "./UserShowsProgress.css";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -63,95 +65,6 @@ const MODE_CONFIG: ModeConfig[] = [
 // posterUrl uses TMDB w342 CDN directly — swap for getPosterUrl() calls once
 // a real data layer provides raw paths.
 // ─────────────────────────────────────────────────────────────────────────────
-
-const MOCK_PROGRESS: ProgressShowEntry[] = [
-  // ── Completed ─────────────────────────────────────────────────────────────
-  {
-    showId:                   1396,
-    title:                    "Breaking Bad",
-    genres:                   "Drama · Crime · Thriller",
-    posterUrl:                "https://image.tmdb.org/t/p/w342/ggFHVNu6YYI5L9pCfOacjizRGt.jpg",
-    status:                   "completed",
-    totalEpisodesWatched:     62,
-    totalEpisodesInSeries:    62,
-  },
-  {
-    showId:                   1399,
-    title:                    "Game of Thrones",
-    genres:                   "Sci-Fi & Fantasy · Drama · Action & Adventure",
-    posterUrl:                "https://image.tmdb.org/t/p/w342/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg",
-    status:                   "completed",
-    totalEpisodesWatched:     73,
-    totalEpisodesInSeries:    73,
-  },
-  {
-    showId:                   87108,
-    title:                    "Chernobyl",
-    genres:                   "Drama · History",
-    posterUrl:                "https://image.tmdb.org/t/p/w342/hlLXt2tOPT6RRnjiUmoxyG1LTFi.jpg",
-    status:                   "completed",
-    totalEpisodesWatched:     5,
-    totalEpisodesInSeries:    5,
-  },
-  {
-    showId:                   2316,
-    title:                    "The Office",
-    genres:                   "Comedy",
-    posterUrl:                "https://image.tmdb.org/t/p/w342/qWnJzyZhyy74gjpSjIXWmuk0ifX.jpg",
-    status:                   "completed",
-    totalEpisodesWatched:     201,
-    totalEpisodesInSeries:    201,
-  },
-
-  // ── Currently Watching ────────────────────────────────────────────────────
-  {
-    showId:                   66732,
-    title:                    "Stranger Things",
-    genres:                   "Drama · Sci-Fi & Fantasy · Mystery",
-    posterUrl:                "https://image.tmdb.org/t/p/w342/49WJfeN0moxb9IPfGn8AIqMGskD.jpg",
-    status:                   "watching",
-    totalEpisodesWatched:     30,
-    totalEpisodesInSeries:    34,
-  },
-  {
-    showId:                   63333,
-    title:                    "The Bear",
-    genres:                   "Drama · Comedy",
-    posterUrl:                "https://image.tmdb.org/t/p/w342/sHFlbKS3WLqMnp9t2ghADIJFnuQ.jpg",
-    status:                   "watching",
-    totalEpisodesWatched:     18,
-    totalEpisodesInSeries:    28,
-  },
-  {
-    showId:                   1622,
-    title:                    "Suits",
-    genres:                   "Drama · Comedy",
-    posterUrl:                "https://image.tmdb.org/t/p/w342/vYKK7NMnVQeHLJHG9SVo6IrBXTP.jpg",
-    status:                   "watching",
-    totalEpisodesWatched:     55,
-    totalEpisodesInSeries:    134,
-  },
-
-  // ── Dropped ───────────────────────────────────────────────────────────────
-  {
-    showId:                   1418,
-    title:                    "The Big Bang Theory",
-    genres:                   "Comedy",
-    posterUrl:                "https://image.tmdb.org/t/p/w342/ooBGRQBdbGzBxAVfExiO8r7kloA.jpg",
-    status:                   "dropped",
-    totalEpisodesWatched:     47,
-    totalEpisodesInSeries:    279,
-  },
-  {
-    showId:                   1403,
-    title:                    "Agents of S.H.I.E.L.D.",
-    genres:                   "Drama · Sci-Fi & Fantasy · Action & Adventure",
-    posterUrl:                "https://image.tmdb.org/t/p/w342/bJZFqO9GFbXJyWhC6SfxTiJPMla.jpg",
-    status:                   "dropped",
-    totalEpisodesWatched:     32,
-    totalEpisodesInSeries:    136,
-  },
-];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
@@ -290,7 +203,43 @@ export default function UserShowsProgress(): React.ReactElement {
   if (!username) return <Navigate to="/home" replace />;
 
   const [currentMode, setCurrentMode] = useState<ShowStatus>("completed");
-  const [entries]                      = useState<ProgressShowEntry[]>(MOCK_PROGRESS);
+
+  const { diaryLogs }         = useDiary();
+  const { currentlyWatching } = useWatchlist();
+
+  // Build ProgressShowEntry list from context data
+  const entries = useMemo<ProgressShowEntry[]>(() => {
+    // Watching — from WatchlistContext
+    const watchingEntries: ProgressShowEntry[] = currentlyWatching.map((cw) => ({
+      showId:                cw.showId,
+      title:                 cw.title,
+      genres:                "",
+      posterUrl:             cw.posterUrl,
+      status:                "watching" as ShowStatus,
+      totalEpisodesWatched:  (cw.currentSeason - 1) * 10 + cw.currentEpisode, // best estimate
+      totalEpisodesInSeries: 0,
+    }));
+
+    // Completed — unique shows from diary logs that have a rating (logged = completed)
+    const seenShowIds = new Set<number>();
+    const completedEntries: ProgressShowEntry[] = [];
+    for (const log of diaryLogs) {
+      if (!seenShowIds.has(log.showId)) {
+        seenShowIds.add(log.showId);
+        completedEntries.push({
+          showId:                log.showId,
+          title:                 log.title,
+          genres:                "",
+          posterUrl:             log.posterUrl,
+          status:                "completed" as ShowStatus,
+          totalEpisodesWatched:  0,
+          totalEpisodesInSeries: 0,
+        });
+      }
+    }
+
+    return [...watchingEntries, ...completedEntries];
+  }, [diaryLogs, currentlyWatching]);
 
   const filtered = entries.filter((e) => e.status === currentMode);
 

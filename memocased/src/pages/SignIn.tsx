@@ -6,6 +6,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthLayout } from "../components/layout/AuthLayout";
 import type { SignInFormFields, SignInFormErrors } from "../types/auth";
+import { signIn } from "../services/authService";
+import { useUser } from "../store/UserContext";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -38,6 +40,7 @@ function validate(fields: SignInFormFields): SignInFormErrors {
 
 export default function SignIn(): React.ReactElement {
   const navigate = useNavigate();
+  const { setUser } = useUser();
 
   const [fields, setFields] = useState<SignInFormFields>(INITIAL_FIELDS);
   const [errors, setErrors] = useState<SignInFormErrors>(INITIAL_ERRORS);
@@ -75,14 +78,21 @@ export default function SignIn(): React.ReactElement {
     setErrors(INITIAL_ERRORS);
 
     try {
-      // ── Mock successful sign-in ──────────────────────────────────────────
-      // Replace this block with your real auth service call when ready:
-      //   const session = await authService.signIn(fields);
-      await new Promise<void>((resolve) => setTimeout(resolve, 600));
+      const { user, error } = await signIn({
+        identifier: fields.identifier,
+        password:   fields.password,
+      });
 
-      navigate("/home");
+      if (error || !user) {
+        setErrors({ form: error ?? "Invalid credentials. Please try again." });
+        setIsSubmitting(false);
+        return;
+      }
+
+      setUser(user);
+      navigate(`/${user.username}`);
     } catch {
-      setErrors({ form: "Invalid credentials. Please try again." });
+      setErrors({ form: "Something went wrong. Please try again." });
       setIsSubmitting(false);
     }
   }

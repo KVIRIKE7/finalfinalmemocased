@@ -8,6 +8,8 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { useUser } from "../../store/UserContext";
+import { useDiary } from "../../store/DiaryContext";
+import { useWatchlist } from "../../store/WatchlistContext";
 import "./ProfileShell.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -16,14 +18,6 @@ interface ProfileShellProps {
   username: string;
   children: React.ReactNode;
 }
-
-// ── Mock stats (replace with real context/store when available) ───────────────
-
-const MOCK_STATS = {
-  showsCompleted:   4,
-  currentlyWatching: 3,
-  dropped:          2,
-};
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -73,6 +67,14 @@ export function ProfileShell({
 }: ProfileShellProps): React.ReactElement {
   const { user: currentUser } = useUser();
   const isOwnProfile = currentUser?.username === username;
+  const { diaryLogs }         = useDiary();
+  const { currentlyWatching } = useWatchlist();
+
+  const stats = {
+    showsCompleted:    diaryLogs.filter((l) => l.rating > 0).length,
+    currentlyWatching: currentlyWatching.length,
+    dropped:           0,
+  };
 
   const tabs = [
     { label: "Profile",   to: `/${username}` },
@@ -108,15 +110,15 @@ export function ProfileShell({
 
           <div className="profile-header__stats" role="list" aria-label="Profile statistics">
             <div role="listitem">
-              <StatCounter label="SHOWS COMPLETED"    value={MOCK_STATS.showsCompleted} />
+              <StatCounter label="SHOWS COMPLETED"    value={stats.showsCompleted} />
             </div>
             <div className="profile-header__stats-divider" aria-hidden="true" />
             <div role="listitem">
-              <StatCounter label="CURRENTLY WATCHING" value={MOCK_STATS.currentlyWatching} />
+              <StatCounter label="CURRENTLY WATCHING" value={stats.currentlyWatching} />
             </div>
             <div className="profile-header__stats-divider" aria-hidden="true" />
             <div role="listitem">
-              <StatCounter label="DROPPED"            value={MOCK_STATS.dropped} />
+              <StatCounter label="DROPPED"            value={stats.dropped} />
             </div>
           </div>
         </div>

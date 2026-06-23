@@ -6,6 +6,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthLayout } from "../components/layout/AuthLayout";
 import type { SignUpFormFields, SignUpFormErrors } from "../types/auth";
+import { signUp } from "../services/authService";
+import { useUser } from "../store/UserContext";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -65,6 +67,7 @@ function validate(fields: SignUpFormFields): SignUpFormErrors {
 
 export default function SignUp(): React.ReactElement {
   const navigate = useNavigate();
+  const { setUser } = useUser();
 
   const [fields, setFields] = useState<SignUpFormFields>(INITIAL_FIELDS);
   const [errors, setErrors] = useState<SignUpFormErrors>(INITIAL_ERRORS);
@@ -99,12 +102,21 @@ export default function SignUp(): React.ReactElement {
     setErrors(INITIAL_ERRORS);
 
     try {
-      // ── Mock successful account creation ─────────────────────────────────
-      // Replace with your real auth service call when ready:
-      //   const session = await authService.signUp(fields);
-      await new Promise<void>((resolve) => setTimeout(resolve, 800));
+      const { user, error } = await signUp({
+        fullName: fields.fullName,
+        username: fields.username,
+        email:    fields.email,
+        password: fields.password,
+      });
 
-      navigate("/home");
+      if (error || !user) {
+        setErrors({ form: error ?? "Could not create your account. Please try again." });
+        setIsSubmitting(false);
+        return;
+      }
+
+      setUser(user);
+      navigate(`/${user.username}`);
     } catch {
       setErrors({ form: "Could not create your account. Please try again." });
       setIsSubmitting(false);

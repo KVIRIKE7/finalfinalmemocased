@@ -26,6 +26,7 @@ const UserDiary           = lazy(() => import("./pages/UserDiary"));
 const UserReviews         = lazy(() => import("./pages/UserReviews"));
 const UserWatchlist       = lazy(() => import("./pages/UserWatchlist"));
 const UserLikes           = lazy(() => import("./pages/UserLikes"));
+const SearchResults       = lazy(() => import("./pages/SearchResults"));
 
 // ── Loading Fallback ──────────────────────────────────────────────────────────
 
@@ -75,6 +76,7 @@ const router = createBrowserRouter([
       // captured as a username and ShowDetail never renders.
       { path: "/shows/:showSlug",           element: <ShowDetail /> },
       { path: "/actors/:actorId",           element: <ActorDetail /> },
+      { path: "/search/:query",             element: <SearchResults /> },
       { path: "/:username",                 element: <UserProfile /> },
       { path: "/:username/shows",           element: <UserShowsProgress /> },
       { path: "/:username/diary",           element: <UserDiary /> },
