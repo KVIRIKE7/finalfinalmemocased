@@ -3,11 +3,13 @@
 // Progress tracking view: Completed · Watching · Dropped
 // ─────────────────────────────────────────────────────────────────────────────
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams, Navigate, Link } from "react-router-dom";
 import { ProfileShell } from "../components/layout/ProfileShell";
 import { useDiary } from "../store/DiaryContext";
 import { useWatchlist } from "../store/WatchlistContext";
+import { useUser } from "../store/UserContext";
+import { fetchShowProgress } from "../services/watchlistService";
 import "./UserShowsProgress.css";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -204,42 +206,68 @@ export default function UserShowsProgress(): React.ReactElement {
 
   const [currentMode, setCurrentMode] = useState<ShowStatus>("completed");
 
+  const { user }              = useUser();
   const { diaryLogs }         = useDiary();
   const { currentlyWatching } = useWatchlist();
 
-  // Build ProgressShowEntry list from context data
+  // Raw show_progress rows from Supabase (completed + dropped)
+  const [progressRows, setProgressRows] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+    fetchShowProgress(user.id).then(setProgressRows);
+  }, [user]);
+
+  // Build ProgressShowEntry list from all sources
   const entries = useMemo<ProgressShowEntry[]>(() => {
-    // Watching — from WatchlistContext
+    // Watching — from WatchlistContext (already loaded from Supabase)
     const watchingEntries: ProgressShowEntry[] = currentlyWatching.map((cw) => ({
       showId:                cw.showId,
       title:                 cw.title,
       genres:                "",
       posterUrl:             cw.posterUrl,
       status:                "watching" as ShowStatus,
-      totalEpisodesWatched:  (cw.currentSeason - 1) * 10 + cw.currentEpisode, // best estimate
+      totalEpisodesWatched:  (cw.currentSeason - 1) * 10 + cw.currentEpisode,
       totalEpisodesInSeries: 0,
     }));
 
-    // Completed — unique shows from diary logs that have a rating (logged = completed)
-    const seenShowIds = new Set<number>();
-    const completedEntries: ProgressShowEntry[] = [];
-    for (const log of diaryLogs) {
-      if (!seenShowIds.has(log.showId)) {
-        seenShowIds.add(log.showId);
-        completedEntries.push({
-          showId:                log.showId,
-          title:                 log.title,
-          genres:                "",
-          posterUrl:             log.posterUrl,
-          status:                "completed" as ShowStatus,
-          totalEpisodesWatched:  0,
-          totalEpisodesInSeries: 0,
-        });
+    // Completed + Dropped — from show_progress table
+    const progressEntries: ProgressShowEntry[] = progressRows
+      .filter((r) => r.status === "completed" || r.status === "dropped")
+      .map((r) => ({
+        showId:                r.tmdb_show_id,
+        title:                 r.title,
+        genres:                (r.genres ?? []).join(" · "),
+        posterUrl:             r.poster_url ?? "",
+        status:                r.status as ShowStatus,
+        totalEpisodesWatched:  r.episodes_watched ?? 0,
+        totalEpisodesInSeries: r.total_episodes   ?? 0,
+      }));
+
+    // Fallback: if no show_progress rows yet, derive completed from diary logs
+    if (progressEntries.filter((e) => e.status === "completed").length === 0) {
+      const seenShowIds = new Set<number>();
+      const fromDiary: ProgressShowEntry[] = [];
+      for (const log of diaryLogs) {
+        if (!seenShowIds.has(log.showId)) {
+          seenShowIds.add(log.showId);
+          fromDiary.push({
+            showId:                log.showId,
+            title:                 log.title,
+            genres:                "",
+            posterUrl:             log.posterUrl,
+            status:                "completed" as ShowStatus,
+            totalEpisodesWatched:  0,
+            totalEpisodesInSeries: 0,
+          });
+        }
       }
+      return [...watchingEntries, ...fromDiary,
+              ...progressEntries.filter((e) => e.status === "dropped")];
     }
 
-    return [...watchingEntries, ...completedEntries];
-  }, [diaryLogs, currentlyWatching]);
+    return [...watchingEntries, ...progressEntries];
+  }, [diaryLogs, currentlyWatching, progressRows]);
 
   const filtered = entries.filter((e) => e.status === currentMode);
 

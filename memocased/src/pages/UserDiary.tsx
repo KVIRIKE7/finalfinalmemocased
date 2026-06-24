@@ -207,7 +207,7 @@ export default function UserDiary(): React.ReactElement {
   // the Navbar's LogModal save handler writes into. This is what fixes the
   // sync bug: a new entry saved from any page's + LOG button now appears
   // here immediately, because both components read the identical state.
-  const { diaryLogs, updateLogEntry } = useDiary();
+  const { diaryLogs, updateLogEntry, removeLogEntry } = useDiary();
 
 
   // ── Review modal state (read-only quote viewer) ───────────────────────────
@@ -249,12 +249,12 @@ export default function UserDiary(): React.ReactElement {
   // DiaryLogEntry being edited, then updates that one row in place via
   // the shared context's updateLogEntry — same array Navbar's LogModal
   // writes into, so this stays in sync everywhere too.
-  function handleSaveEditedLog(updated: LogEntry): void {
-    if (!selectedLogToEdit) return; // guard — shouldn't happen, modal only opens with a target
+  async function handleSaveEditedLog(updated: LogEntry): Promise<void> {
+    if (!selectedLogToEdit) return;
 
-    updateLogEntry(selectedLogToEdit.logId, {
+    await updateLogEntry(selectedLogToEdit.logId, {
       seasonNumber: updated.season,
-      dateLogged:   updated.watchedDate ?? selectedLogToEdit.dateLogged, // keep original date if cleared
+      dateLogged:   updated.watchedDate ?? selectedLogToEdit.dateLogged,
       rating:       updated.rating,
       isFavorite:   updated.isLiked,
       reviewText:   updated.review.trim().length > 0 ? updated.review : undefined,

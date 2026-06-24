@@ -199,11 +199,8 @@ export function Navbar(): React.ReactElement {
 
   // ── Log modal handlers ──────────────────────────────────────────────────────
 
-  const handleLogSave = useCallback((entry: LogEntry): void => {
-    // Writes into the shared diaryLogs source of truth (DiaryContext).
-    // Any component reading useDiary().diaryLogs — including the
-    // UserDiary page — re-renders immediately with the new entry.
-    addLogEntry(entry);
+  const handleLogSave = useCallback(async (entry: LogEntry): Promise<void> => {
+    await addLogEntry(entry);
     setIsLogModalOpen(false);
   }, [addLogEntry]);
 

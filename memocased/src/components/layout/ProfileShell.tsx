@@ -10,6 +10,7 @@ import { NavLink } from "react-router-dom";
 import { useUser } from "../../store/UserContext";
 import { useDiary } from "../../store/DiaryContext";
 import { useWatchlist } from "../../store/WatchlistContext";
+import { useDroppedCount } from "../../hooks/useDroppedCount";
 import "./ProfileShell.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -69,11 +70,12 @@ export function ProfileShell({
   const isOwnProfile = currentUser?.username === username;
   const { diaryLogs }         = useDiary();
   const { currentlyWatching } = useWatchlist();
+  const droppedCount          = useDroppedCount();
 
   const stats = {
-    showsCompleted:    diaryLogs.filter((l) => l.rating > 0).length,
+    showsCompleted:    new Set(diaryLogs.map((l) => l.showId)).size,
     currentlyWatching: currentlyWatching.length,
-    dropped:           0,
+    dropped:           droppedCount,
   };
 
   const tabs = [

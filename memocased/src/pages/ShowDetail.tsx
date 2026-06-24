@@ -22,6 +22,10 @@ import { useParams, Link } from "react-router-dom";
 import { getShowDetails } from "../services/tmdbApi";
 import { getPosterUrl } from "../utils/tmdbImage";
 import type { TMDBShowDetail } from "../types/tmdb";
+import { useWatchlist } from "../store/WatchlistContext";
+import { useUser } from "../store/UserContext";
+import { updateShowProgress, fetchShowProgress } from "../services/watchlistService";
+import { supabase } from "../services/supabase";
 import "./ShowDetail.css";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -48,24 +52,21 @@ export default function ShowDetail(): React.ReactElement {
   const [showData, setShowData]   = useState<TmdbShowDetails | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  const { user }                                              = useUser();
+  const { isInWatchlist, isWatching, addToWatchlist,
+          removeFromWatchlist, handleStartWatching }          = useWatchlist();
+
   // ── Step 2: Personal tracking toolstrip state ────────────────────────────
-  // Declared here — unconditionally, before the loading/not-found early
-  // returns below — because React's Rules of Hooks require every hook to
-  // run in the same order on every render. Placing these after a
-  // conditional `return` would skip them entirely on the loading/error
-  // paths, which breaks hook ordering the moment the component re-renders
-  // with different data (a real bug fixed earlier in this same file's
-  // history when it happened to the toolstrip hooks specifically).
-  //
-  // Three flags govern which list(s) the show appears in, with rules that
-  // keep them mutually exclusive in the right combinations:
-  //   - isWatched (active/history) and inWatchlist (planning) can never
-  //     both be true — a show moves between lists, never straddles them.
-  //   - isDropped is a sub-state of isWatched: dropping a show implies
-  //     it's part of your watch history, not your future watchlist.
-  const [isWatched, setIsWatched]     = useState<boolean>(false);
-  const [inWatchlist, setInWatchlist] = useState<boolean>(false);
-  const [isDropped, setIsDropped]     = useState<boolean>(false);
+  const [isDropped, setIsDropped] = useState<boolean>(false);
+
+  // Load dropped status from Supabase when show data arrives
+  useEffect(() => {
+    if (!user || !showData) return;
+    fetchShowProgress(user.id).then((rows) => {
+      const row = rows.find((r: any) => r.tmdb_show_id === showData.id);
+      if (row?.status === "dropped") setIsDropped(true);
+    });
+  }, [user, showData]);
 
   // ── Step 4: Metadata tab tracker ──────────────────────────────────────────
   // Same placement rule as the toolstrip hooks above — declared before any
@@ -120,47 +121,62 @@ export default function ShowDetail(): React.ReactElement {
   }, [showSlug]);
 
   // ── Watching toggle ───────────────────────────────────────────────────────
-  // ON  → leave the Watchlist (can't be both planning-to-watch and watching)
-  // OFF → also clear Dropped (no longer in active history, so "dropped" is
-  //        no longer a meaningful status either)
-  function handleWatchedClick(): void {
-    setIsWatched((prev) => {
-      const next = !prev;
-      if (next) {
-        setInWatchlist(false);
-      } else {
-        setIsDropped(false);
-      }
-      return next;
-    });
+  async function handleWatchedClick(): Promise<void> {
+    if (!showData) return;
+    if (isWatching(showData.id)) return; // already watching, no toggle off here
+    await handleStartWatching(showData.id);
   }
 
   // ── Watchlist toggle ──────────────────────────────────────────────────────
-  // ON → clear both active-history flags; this is a "plan to watch" state,
-  //      not an active or historical one — it can't coexist with either.
-  function handleWatchlistClick(): void {
-    setInWatchlist((prev) => {
-      const next = !prev;
-      if (next) {
-        setIsWatched(false);
-        setIsDropped(false);
-      }
-      return next;
-    });
+  async function handleWatchlistClick(): Promise<void> {
+    if (!showData) return;
+    if (!user) return; // must be logged in
+    if (isInWatchlist(showData.id)) {
+      await removeFromWatchlist(showData.id);
+    } else {
+      await addToWatchlist({
+        showId:             showData.id,
+        title:              showData.name,
+        posterUrl:          showData.poster_path
+                              ? `https://image.tmdb.org/t/p/w342${showData.poster_path}`
+                              : "",
+        releaseYear:        showData.first_air_date
+                              ? Number(showData.first_air_date.slice(0, 4))
+                              : 0,
+        contentRating:      showData.content_ratings?.results?.[0]?.rating ?? "",
+        totalEpisodesCount: showData.number_of_episodes ?? 0,
+      });
+    }
   }
 
   // ── Dropped toggle ────────────────────────────────────────────────────────
-  // ON → force Watching to true (dropping implies watch history) and clear
-  //      Watchlist (it's no longer a future show, you already started it).
-  function handleDroppedClick(): void {
-    setIsDropped((prev) => {
-      const next = !prev;
-      if (next) {
-        setIsWatched(true);
-        setInWatchlist(false);
-      }
-      return next;
-    });
+  async function handleDroppedClick(): Promise<void> {
+    if (!showData || !user) return;
+    const next = !isDropped;
+    setIsDropped(next);
+
+    if (next) {
+      // Upsert a show_progress row with status "dropped"
+      await supabase.from("show_progress").upsert({
+        user_id:          user.id,
+        tmdb_show_id:     showData.id,
+        title:            showData.name,
+        poster_url:       showData.poster_path
+                            ? `https://image.tmdb.org/t/p/w342${showData.poster_path}`
+                            : null,
+        genres:           (showData.genres ?? []).map((g: any) => g.name),
+        total_episodes:   showData.number_of_episodes ?? 0,
+        episodes_watched: 0,
+        status:           "dropped",
+      }, { onConflict: "user_id,tmdb_show_id" });
+    } else {
+      // Remove the dropped entry
+      await supabase.from("show_progress")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("tmdb_show_id", showData.id)
+        .eq("status", "dropped");
+    }
   }
 
   // ── Season completed toggle ────────────────────────────────────────────────
@@ -286,20 +302,23 @@ export default function ShowDetail(): React.ReactElement {
         <div className="action-toolstrip">
           <button
             type="button"
-            className={`toolstrip-btn toolstrip-btn--watch${isWatched ? " is-active" : ""}`}
+            className={`toolstrip-btn toolstrip-btn--watch${showData && isWatching(showData.id) ? " is-active" : ""}`}
             onClick={handleWatchedClick}
-            aria-pressed={isWatched}
+            aria-pressed={showData ? isWatching(showData.id) : false}
+            disabled={!user}
           >
-            {isWatched ? "✓ Watching" : "Watch"}
+            {showData && isWatching(showData.id) ? "✓ Watching" : "Watch"}
           </button>
 
           <button
             type="button"
-            className={`toolstrip-btn toolstrip-btn--watchlist${inWatchlist ? " is-active" : ""}`}
+            className={`toolstrip-btn toolstrip-btn--watchlist${showData && isInWatchlist(showData.id) ? " is-active" : ""}`}
             onClick={handleWatchlistClick}
-            aria-pressed={inWatchlist}
+            aria-pressed={showData ? isInWatchlist(showData.id) : false}
+            disabled={!user}
+            title={!user ? "Sign in to save shows" : undefined}
           >
-            {inWatchlist ? "✓ In Watchlist" : "Watchlist"}
+            {showData && isInWatchlist(showData.id) ? "✓ In Watchlist" : "Watchlist"}
           </button>
 
           <button
@@ -307,6 +326,7 @@ export default function ShowDetail(): React.ReactElement {
             className={`toolstrip-btn toolstrip-btn--dropped${isDropped ? " is-active" : ""}`}
             onClick={handleDroppedClick}
             aria-pressed={isDropped}
+            disabled={!user}
           >
             {isDropped ? "✓ Dropped" : "Drop"}
           </button>
