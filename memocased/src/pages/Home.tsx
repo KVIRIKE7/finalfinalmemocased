@@ -4,36 +4,36 @@
 // All state lives here. recordActivity() is the single write point for the log.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import React, { useState, useCallback, useMemo } from "react";
-import { Link } from "react-router-dom";
+import React, { useCallback, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useUser } from "../store/UserContext";
 import { useDiary } from "../store/DiaryContext";
+import { useAppContext, type TrackedShow } from "../store/AppContext";
+import { getPosterUrl } from "../utils/tmdbImage";
 import { LogModal } from "../components/LogModal";
 import type { AutomatedLogData, LogEntry } from "../types/navbar";
-import "./Home.css";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
 // ─────────────────────────────────────────────────────────────────────────────
-
-interface ActiveShowProgress {
-  showId: number;
-  title: string;
-  backdropUrl: string;
-  currentSeason: number;
-  currentEpisode: number;
-  totalSeasons: number;
-  episodesInCurrentSeason: number;
-}
-
-interface WatchlistItem {
-  showId: number;
-  title: string;
-  posterUrl: string;
-  backdropUrl: string;
-  totalSeasons: number;
-  episodesPerSeason: number[];
-}
+//
+// FEAT-HOME-DYNAMIC: ActiveShowProgress and WatchlistItem (and their mock
+// INITIAL_PROGRESS / INITIAL_WATCHLIST arrays) previously modeled the two
+// dashboard rows independently of the rest of the app. Both are removed —
+// both rows now derive directly from the global AppContext.trackedShows
+// array, via the `status` field, so a show tracked from ShowDetail.tsx (or
+// anywhere else that calls updateShowStatus) appears here with zero extra
+// wiring, and disappears here the moment its status changes elsewhere.
+//
+// KNOWN LIMITATION: TrackedShow (id, name, poster_path, status) carries no
+// episode/season progress data — AppContext was never extended with fields
+// like currentSeason/currentEpisode/episodesInCurrentSeason. The previous
+// mock-data version of "Continue Watching" rendered a progress bar and an
+// "S{n}•E{n}" pointer; that data simply doesn't exist in global state today,
+// so rather than fabricate fake numbers, the Continue Watching card below
+// renders poster + title only, with no progress indicator. Restoring that
+// UI correctly requires extending AppContext (or fetching live per-show
+// progress from a real backend) — flagged here, not silently faked.
 
 // Each log entry records *what* was watched and *when*.
 // The streak is computed purely from these entries — no login signals.
@@ -106,89 +106,12 @@ function computeStreak(activeDates: Set<string>): number {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MOCK DATA
+// FEAT-HOME-DYNAMIC: the static INITIAL_PROGRESS / INITIAL_WATCHLIST arrays
+// that used to seed these two rows are gone — both rows now derive from
+// AppContext.trackedShows (see the Home() component below). Only the
+// activity-log seed remains, since the streak banner is a separate,
+// genuinely local-only feature not covered by trackedShows.
 // ─────────────────────────────────────────────────────────────────────────────
-
-const INITIAL_PROGRESS: ActiveShowProgress[] = [
-  {
-    showId: 1396,
-    title: "Breaking Bad",
-    backdropUrl: "https://image.tmdb.org/t/p/w1280/tsRy63Mu5cu8etL1X7ZLyf7UP1M.jpg",
-    currentSeason: 4,
-    currentEpisode: 8,
-    totalSeasons: 5,
-    episodesInCurrentSeason: 13,
-  },
-  {
-    showId: 1399,
-    title: "Game of Thrones",
-    backdropUrl: "https://image.tmdb.org/t/p/w1280/suopoADq0k8YZr4dQXcU6pToj6s.jpg",
-    currentSeason: 6,
-    currentEpisode: 9,
-    totalSeasons: 8,
-    episodesInCurrentSeason: 10,
-  },
-  {
-    showId: 66732,
-    title: "Stranger Things",
-    backdropUrl: "https://image.tmdb.org/t/p/w1280/56v2KjBlU4XaOv9rVYEQypROD7P.jpg",
-    currentSeason: 3,
-    currentEpisode: 6,
-    totalSeasons: 4,
-    episodesInCurrentSeason: 8,
-  },
-  {
-    showId: 63333,
-    title: "The Bear",
-    backdropUrl: "https://image.tmdb.org/t/p/w1280/8Au7fcOFhqDMPFbV57qBNrGKm7Q.jpg",
-    currentSeason: 2,
-    currentEpisode: 9,
-    totalSeasons: 3,
-    episodesInCurrentSeason: 10,
-  },
-];
-
-const INITIAL_WATCHLIST: WatchlistItem[] = [
-  {
-    showId: 1418,
-    title: "The Big Bang Theory",
-    posterUrl: "https://image.tmdb.org/t/p/w342/ooBGRQBdbGzBxAVfExiO8r7kloA.jpg",
-    backdropUrl: "https://image.tmdb.org/t/p/w1280/nGsNruW3W27V6r4gkyMX0E6to8.jpg",
-    totalSeasons: 12,
-    episodesPerSeason: [17, 23, 23, 24, 24, 24, 24, 24, 24, 24, 24, 24],
-  },
-  {
-    showId: 1622,
-    title: "Suits",
-    posterUrl: "https://image.tmdb.org/t/p/w342/vYKK7NMnVQeHLJHG9SVo6IrBXTP.jpg",
-    backdropUrl: "https://image.tmdb.org/t/p/w1280/8MdGCX9o1fFMZcYzx3qHXzGvfM7.jpg",
-    totalSeasons: 9,
-    episodesPerSeason: [12, 16, 16, 16, 16, 16, 10, 10, 10],
-  },
-  {
-    showId: 2316,
-    title: "The Office",
-    posterUrl: "https://image.tmdb.org/t/p/w342/qWnJzyZhyy74gjpSjIXWmuk0ifX.jpg",
-    backdropUrl: "https://image.tmdb.org/t/p/w1280/sRpBeSMBiCpfGBJ6yOor5YnIkMp.jpg",
-    totalSeasons: 9,
-    episodesPerSeason: [6, 22, 25, 19, 26, 26, 26, 24, 25],
-  },
-  {
-    showId: 87108,
-    title: "Chernobyl",
-    posterUrl: "https://image.tmdb.org/t/p/w342/hlLXt2tOPT6RRnjiUmoxyG1LTFi.jpg",
-    backdropUrl: "https://image.tmdb.org/t/p/w1280/pMBjkGVTv1xFpxNz1JaAhx6Qp1p.jpg",
-    totalSeasons: 1,
-    episodesPerSeason: [5],
-  },
-  {
-    showId: 1403,
-    title: "Agents of S.H.I.E.L.D.",
-    posterUrl: "https://image.tmdb.org/t/p/w342/bJZFqO9GFbXJyWhC6SfxTiJPMla.jpg",
-    backdropUrl: "https://image.tmdb.org/t/p/w1280/j2QPLdWJbHmEfYfQYEf6fHlUXJW.jpg",
-    totalSeasons: 7,
-    episodesPerSeason: [22, 22, 22, 22, 22, 13, 13],
-  },
-];
 
 // Pre-seed the log with a 3-day streak ending yesterday so the banner
 // shows something meaningful on first load. Remove for production.
@@ -227,7 +150,7 @@ function CheckIcon(): React.ReactElement {
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface ContinueWatchingCardProps {
-  show: ActiveShowProgress;
+  show: TrackedShow;
   onMarkWatched: (showId: number) => void;
 }
 
@@ -235,45 +158,54 @@ function ContinueWatchingCard({
   show,
   onMarkWatched,
 }: ContinueWatchingCardProps): React.ReactElement {
-  const { showId, title, backdropUrl, currentSeason, currentEpisode, episodesInCurrentSeason } = show;
-
-  const progressPercent = Math.min(
-    Math.round((currentEpisode / episodesInCurrentSeason) * 100),
-    100
-  );
+  const { id, name, poster_path } = show;
+  // Built directly per spec: https://image.tmdb.org/t/p/w300${show.poster_path}
+  // poster_path can be an empty string on a freshly-tracked show with no
+  // artwork yet — guarded so a broken `…/w300` (no path segment) never
+  // reaches the <img> src.
+  const imageUrl = poster_path
+    ? `https://image.tmdb.org/t/p/w300${poster_path}`
+    : null;
 
   return (
-    <article className="cw-card" aria-label={`${title}, S${currentSeason}E${currentEpisode}`}>
+    <article className="cw-card" aria-label={name}>
       <div className="cw-card__image-wrapper">
-        <img
-          className="cw-card__image"
-          src={backdropUrl}
-          alt={`${title} backdrop`}
-          loading="lazy"
-          draggable={false}
-        />
-        <div
-          className="cw-card__progress-track"
-          role="progressbar"
-          aria-valuenow={progressPercent}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-label={`${progressPercent}% through season ${currentSeason}`}
-        >
-          <div className="cw-card__progress-fill" style={{ width: `${progressPercent}%` }} />
-        </div>
+        {/* FEAT-CLICKABLE-POSTERS: the artwork itself now navigates to the
+            show's detail page — previously only the checkmark button was
+            interactive, so clicking anywhere else on the card did nothing. */}
+        <Link to={`/shows/${id}`} className="cw-card__image-link">
+          {imageUrl && (
+            <img
+              className="cw-card__image"
+              src={imageUrl}
+              alt={`${name} artwork`}
+              loading="lazy"
+              draggable={false}
+            />
+          )}
+        </Link>
+
+        {/*
+          KNOWN LIMITATION (see FEAT-HOME-DYNAMIC note at top of file):
+          TrackedShow carries no episode/season progress, so the progress
+          bar and "S{n}•E{n}" pointer that used to render here are gone —
+          there is currently no global data source for them. Re-introduce
+          once AppContext (or a real backend) tracks per-show progress.
+        */}
+
         <button
           className="cw-card__check-button"
-          onClick={() => onMarkWatched(showId)}
-          aria-label={`Mark S${currentSeason}E${currentEpisode} of ${title} as watched`}
+          onClick={() => onMarkWatched(id)}
+          aria-label={`Mark an episode of ${name} as watched`}
           title="Mark episode as watched"
         >
           <CheckIcon />
         </button>
       </div>
       <div className="cw-card__meta">
-        <p className="cw-card__title">{title}</p>
-        <p className="cw-card__subtitle">S{currentSeason}&nbsp;•&nbsp;E{currentEpisode}</p>
+        <Link to={`/shows/${id}`} className="cw-card__title-link">
+          <p className="cw-card__title">{name}</p>
+        </Link>
       </div>
     </article>
   );
@@ -285,7 +217,7 @@ function ContinueWatchingCard({
 
 interface ContinueWatchingSectionProps {
   username: string;
-  shows: ActiveShowProgress[];
+  shows: TrackedShow[];
   onMarkWatched: (showId: number) => void;
 }
 
@@ -293,9 +225,15 @@ function ContinueWatchingSection({
   username,
   shows,
   onMarkWatched,
-}: ContinueWatchingSectionProps): React.ReactElement | null {
-  if (shows.length === 0) return null;
+}: ContinueWatchingSectionProps): React.ReactElement {
+  const navigate = useNavigate();
 
+  // FEAT-NAV-EMPTY-CURRENT: previously this whole section, including the
+  // heading + navigation Link to /:username/shows/currentlywatching,
+  // returned null when the list was empty — leaving a user with nothing
+  // currently watching with no way to even reach that page from Home.
+  // Now the header (and its Link) always renders; only the scrollable
+  // card row swaps for an actionable empty-state button.
   return (
     <section className="cw-section" aria-labelledby="cw-section-heading">
       <div className="cw-section__header">
@@ -308,13 +246,29 @@ function ContinueWatchingSection({
           <span className="cw-section__heading-arrow" aria-hidden="true">›</span>
         </Link>
       </div>
-      <div className="cw-section__scroll-container" role="list" aria-label="Shows in progress">
-        {shows.map((show) => (
-          <div key={`cw-${show.showId}`} className="cw-section__card-slot" role="listitem">
-            <ContinueWatchingCard show={show} onMarkWatched={onMarkWatched} />
-          </div>
-        ))}
-      </div>
+
+      {shows.length === 0 ? (
+        <div className="cw-section__empty">
+          <p className="cw-section__empty-text">
+            Nothing in progress yet.
+          </p>
+          <button
+            type="button"
+            className="cw-section__empty-button"
+            onClick={() => navigate("/shows")}
+          >
+            Go find shows
+          </button>
+        </div>
+      ) : (
+        <div className="cw-section__scroll-container" role="list" aria-label="Shows in progress">
+          {shows.map((show) => (
+            <div key={`cw-${show.id}`} className="cw-section__card-slot" role="listitem">
+              <ContinueWatchingCard show={show} onMarkWatched={onMarkWatched} />
+            </div>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
@@ -324,35 +278,42 @@ function ContinueWatchingSection({
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface StartWatchingCardProps {
-  item: WatchlistItem;
+  item: TrackedShow;
   onPromote: (showId: number) => void;
 }
 
 function StartWatchingCard({ item, onPromote }: StartWatchingCardProps): React.ReactElement {
-  const { showId, title, posterUrl } = item;
+  const { id, name } = item;
+  const imageUrl = getPosterUrl(item.poster_path, "w342");
 
   return (
-    <article className="sw-card" aria-label={`${title} — watchlist`}>
+    <article className="sw-card" aria-label={`${name} — watchlist`}>
       <div className="sw-card__poster-wrapper">
-        <img
-          className="sw-card__poster-image"
-          src={posterUrl}
-          alt={`${title} poster`}
-          loading="lazy"
-          draggable={false}
-        />
+        {/* FEAT-CLICKABLE-POSTERS: poster now links to the show detail page. */}
+        <Link to={`/shows/${id}`} className="sw-card__poster-link">
+          {imageUrl && (
+            <img
+              className="sw-card__poster-image"
+              src={imageUrl}
+              alt={`${name} poster`}
+              loading="lazy"
+              draggable={false}
+            />
+          )}
+        </Link>
         <button
           className="sw-card__check-button"
-          onClick={() => onPromote(showId)}
-          aria-label={`Start watching ${title}`}
+          onClick={() => onPromote(id)}
+          aria-label={`Start watching ${name}`}
           title="Start watching"
         >
           <CheckIcon />
         </button>
       </div>
       <div className="sw-card__meta">
-        <p className="sw-card__title">{title}</p>
-        <p className="sw-card__subtitle">S1&nbsp;•&nbsp;E1</p>
+        <Link to={`/shows/${id}`} className="sw-card__title-link">
+          <p className="sw-card__title">{name}</p>
+        </Link>
       </div>
     </article>
   );
@@ -364,7 +325,7 @@ function StartWatchingCard({ item, onPromote }: StartWatchingCardProps): React.R
 
 interface StartWatchingSectionProps {
   username: string;
-  items: WatchlistItem[];
+  items: TrackedShow[];
   onPromote: (showId: number) => void;
 }
 
@@ -372,9 +333,13 @@ function StartWatchingSection({
   username,
   items,
   onPromote,
-}: StartWatchingSectionProps): React.ReactElement | null {
-  if (items.length === 0) return null;
+}: StartWatchingSectionProps): React.ReactElement {
+  const navigate = useNavigate();
 
+  // FEAT-NAV-EMPTY-WATCH: same fix as Continue Watching — the heading and
+  // its navigation Link to /:username/watchlist must always render, even
+  // with zero items, so a user with an empty watchlist can still reach
+  // the full watchlist page from Home.
   return (
     <section className="sw-section" aria-labelledby="sw-section-heading">
       <div className="sw-section__header">
@@ -387,13 +352,29 @@ function StartWatchingSection({
           <span className="sw-section__heading-arrow" aria-hidden="true">›</span>
         </Link>
       </div>
-      <div className="sw-section__scroll-container" role="list" aria-label="Watchlist">
-        {items.map((item) => (
-          <div key={`sw-${item.showId}`} className="sw-section__card-slot" role="listitem">
-            <StartWatchingCard item={item} onPromote={onPromote} />
-          </div>
-        ))}
-      </div>
+
+      {items.length === 0 ? (
+        <div className="sw-section__empty">
+          <p className="sw-section__empty-text">
+            Your watchlist is empty.
+          </p>
+          <button
+            type="button"
+            className="sw-section__empty-button"
+            onClick={() => navigate(`/${username}/watchlist`)}
+          >
+            Go to your watchlist
+          </button>
+        </div>
+      ) : (
+        <div className="sw-section__scroll-container" role="list" aria-label="Watchlist">
+          {items.map((item) => (
+            <div key={`sw-${item.id}`} className="sw-section__card-slot" role="listitem">
+              <StartWatchingCard item={item} onPromote={onPromote} />
+            </div>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
@@ -511,11 +492,24 @@ function StreakBanner({ currentStreak, activeDates }: StreakBannerProps): React.
 export default function Home(): React.ReactElement {
   const { user } = useUser();
   const { addLogEntry } = useDiary();
+  const { trackedShows, updateShowStatus } = useAppContext();
   const username = user?.username ?? "profile";
 
-  const [progress, setProgress] = useState<ActiveShowProgress[]>(INITIAL_PROGRESS);
-  const [watchlist, setWatchlist] = useState<WatchlistItem[]>(INITIAL_WATCHLIST);
-  const watchlistRef = React.useRef<WatchlistItem[]>(INITIAL_WATCHLIST);
+  // FEAT-HOME-DYNAMIC: both rows now derive straight from the global
+  // trackedShows array via the `status` field — no local progress/watchlist
+  // state, no mock seed data. A show tracked as "watching" anywhere in the
+  // app (e.g. ShowDetail's toolstrip) appears in Continue Watching here
+  // immediately; a show tracked as "watchlist" appears in Start Watching.
+  const currentlyWatching = useMemo(
+    () => trackedShows.filter((s) => s.status === "watching"),
+    [trackedShows]
+  );
+
+  const watchlistShows = useMemo(
+    () => trackedShows.filter((s) => s.status === "watchlist"),
+    [trackedShows]
+  );
+
   const [activityLog, setActivityLog] = useState<ActivityEntry[]>(INITIAL_ACTIVITY);
 
   // ── Modal state ───────────────────────────────────────────────────────────
@@ -575,143 +569,78 @@ export default function Home(): React.ReactElement {
     setAutomatedLogInjection(null);
   }, [addLogEntry, recordActivity]);
 
-  // ── Continue Watching: episode increment loop ─────────────────────────────
+  // ── Continue Watching: checkmark click ────────────────────────────────────
+  //
+  // FEAT-HOME-DYNAMIC — KNOWN LIMITATION:
+  // The previous version of this handler incremented currentEpisode against
+  // episodesInCurrentSeason/totalSeasons, with three branches (normal
+  // increment, season finale, series finale) driving an automated log-entry
+  // modal. None of that season/episode data exists on TrackedShow — global
+  // state has no field for it. Replicating the old three-path logic here is
+  // not possible without fabricating numbers AppContext doesn't track.
+  //
+  // What this now does instead, honestly within the data that's available:
+  // clicking the checkmark marks the show as finished — it's removed from
+  // Continue Watching (status → "removed") and opens the log modal so the
+  // user can record what they watched, with the activity recorded for the
+  // streak banner. Restoring real per-episode increments requires extending
+  // AppContext with progress fields (or fetching live progress from a real
+  // backend), which is out of scope for this fix.
 
   const handleMarkWatched = useCallback(
     (showId: number): void => {
-      setProgress((prev) =>
-        prev.reduce<ActiveShowProgress[]>((acc, show) => {
-          if (show.showId !== showId) {
-            acc.push(show);
-            return acc;
-          }
+      const show = trackedShows.find((s) => s.id === showId);
+      if (!show) return;
 
-          const nextEpisode = show.currentEpisode + 1;
+      recordActivity(showId, 0, 0);
 
-          if (nextEpisode <= show.episodesInCurrentSeason) {
-            // Path A: normal episode increment
-            recordActivity(showId, show.currentSeason, show.currentEpisode);
-            acc.push({ ...show, currentEpisode: nextEpisode });
-            return acc;
-          }
+      setAutomatedLogInjection({
+        showId:      show.id,
+        title:       show.name,
+        posterUrl:   getPosterUrl(show.poster_path, "w342") ?? "",
+        seasonToLog: 1,
+      });
+      setIsLogModalOpen(true);
 
-          const isLastSeason = show.currentSeason === show.totalSeasons;
-
-          if (isLastSeason) {
-            // Path B: series finale — trigger log modal for the final season,
-            // then drop the show from the Continue Watching row.
-            recordActivity(showId, show.currentSeason, show.currentEpisode);
-
-            setAutomatedLogInjection({
-              showId:      show.showId,
-              title:       show.title,
-              // Derive a poster URL from the backdrop URL by swapping
-              // the CDN size segment (backdrop → poster best-effort).
-              // Replace with a real posterUrl field on ActiveShowProgress
-              // when you wire TMDB data fully.
-              posterUrl:   show.backdropUrl,
-              seasonToLog: show.currentSeason,
-            });
-            setIsLogModalOpen(true);
-
-            // Omit from acc — show is complete, remove from row
-            return acc;
-          }
-
-          // Path C: season finale — trigger log modal for the completed
-          // season, then advance the show to the next season on the card.
-          recordActivity(showId, show.currentSeason, show.currentEpisode);
-
-          setAutomatedLogInjection({
-            showId:      show.showId,
-            title:       show.title,
-            posterUrl:   show.backdropUrl,
-            seasonToLog: show.currentSeason,
-          });
-          setIsLogModalOpen(true);
-
-          // Background state advance: next season starts at E1
-          acc.push({
-            ...show,
-            currentSeason:  show.currentSeason + 1,
-            currentEpisode: 1,
-            // episodesInCurrentSeason will be refreshed from TMDB
-            // when full show-data wiring is added
-          });
-          return acc;
-        }, [])
-      );
+      updateShowStatus(show, "removed");
     },
-    [recordActivity]
+    [trackedShows, updateShowStatus, recordActivity]
   );
 
-  // Keep ref in sync so handlePromote can read current watchlist without
-  // needing to nest setProgress inside a setWatchlist updater.
-  React.useEffect(() => {
-    watchlistRef.current = watchlist;
-  }, [watchlist]);
-
-  // ── Start Watching: promote watchlist item → progress ────────────────────
+  // ── Start Watching: promote watchlist item → currently watching ──────────
   //
-  // ROOT CAUSE OF DUPLICATE BUG:
-  // Calling setProgress() *inside* a setWatchlist() updater means React 18
-  // Strict Mode's intentional double-invocation of updaters fires setProgress
-  // twice → two identical cards prepended.
-  //
-  // FIX: read the current watchlist from watchlistRef (always current, zero
-  // stale-closure risk), build the promoted object, then call setWatchlist
-  // and setProgress as independent sibling calls at the same scope level.
-  // React 18 automatic batching merges them into one render. Neither updater
-  // has side effects — both are pure array derivations.
+  // FEAT-HOME-DYNAMIC: this used to be a multi-step local-state dance
+  // (read watchlistRef, build a fabricated ActiveShowProgress object with
+  // currentSeason: 1 / currentEpisode: 1, push into a separate `progress`
+  // array, filter out of a separate `watchlist` array, all coordinated to
+  // avoid a React 18 Strict Mode double-invoke bug). None of that
+  // coordination is needed anymore — promoting a show is just a status
+  // change, and AppContext's updateShowStatus already replaces a show's
+  // status atomically in one array, so there's no second array to keep in
+  // sync and no duplicate-invocation risk to guard against.
 
   const handlePromote = useCallback(
     (showId: number): void => {
-      // ── 1. Read current watchlist synchronously — no setter needed ───────
-      const item = watchlistRef.current.find((w) => w.showId === showId);
-      if (!item) return; // Guard A: already removed or never existed
+      const item = watchlistShows.find((w) => w.id === showId);
+      if (!item) return;
 
-      // ── 2. Build the promoted ActiveShowProgress object ──────────────────
-      const promoted: ActiveShowProgress = {
-        showId:                  item.showId,
-        title:                   item.title,
-        backdropUrl:             item.backdropUrl,
-        currentSeason:           1,
-        currentEpisode:          1,
-        totalSeasons:            item.totalSeasons,
-        episodesInCurrentSeason: item.episodesPerSeason[0] ?? 1,
-      };
-
-      // ── 3. Update progress — standalone, NOT nested inside any updater ───
-      setProgress((prevProgress) => {
-        // Guard B: idempotent duplicate check
-        if (prevProgress.some((s) => s.showId === promoted.showId)) {
-          return prevProgress;
-        }
-        return [promoted, ...prevProgress]; // prepend — newest first in row
-      });
-
-      // ── 4. Remove from watchlist — clean filter, no mutation ─────────────
-      setWatchlist((prevWatchlist) =>
-        prevWatchlist.filter((w) => w.showId !== showId)
-      );
-
-      // ── 5. Record streak activity ─────────────────────────────────────────
-      recordActivity(item.showId, 1, 1);
+      updateShowStatus(item, "watching");
+      recordActivity(item.id, 1, 1);
     },
-    [recordActivity]
+    [watchlistShows, updateShowStatus, recordActivity]
   );
 
   return (
     <div className="home-page">
       <ContinueWatchingSection
         username={username}
-        shows={progress}
+        shows={currentlyWatching}
         onMarkWatched={handleMarkWatched}
       />
 
       <StartWatchingSection
         username={username}
-        items={watchlist}
+        items={watchlistShows}
         onPromote={handlePromote}
       />
 

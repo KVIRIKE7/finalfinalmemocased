@@ -22,6 +22,7 @@ import { useParams, Link } from "react-router-dom";
 import { getShowDetails } from "../services/tmdbApi";
 import { getPosterUrl } from "../utils/tmdbImage";
 import type { TMDBShowDetail } from "../types/tmdb";
+import { useAppContext, type TrackedShow } from "../store/AppContext";
 import "./ShowDetail.css";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -48,24 +49,13 @@ export default function ShowDetail(): React.ReactElement {
   const [showData, setShowData]   = useState<TmdbShowDetails | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // ── Step 2: Personal tracking toolstrip state ────────────────────────────
-  // Declared here — unconditionally, before the loading/not-found early
-  // returns below — because React's Rules of Hooks require every hook to
-  // run in the same order on every render. Placing these after a
-  // conditional `return` would skip them entirely on the loading/error
-  // paths, which breaks hook ordering the moment the component re-renders
-  // with different data (a real bug fixed earlier in this same file's
-  // history when it happened to the toolstrip hooks specifically).
-  //
-  // Three flags govern which list(s) the show appears in, with rules that
-  // keep them mutually exclusive in the right combinations:
-  //   - isWatched (active/history) and inWatchlist (planning) can never
-  //     both be true — a show moves between lists, never straddles them.
-  //   - isDropped is a sub-state of isWatched: dropping a show implies
-  //     it's part of your watch history, not your future watchlist.
-  const [isWatched, setIsWatched]     = useState<boolean>(false);
-  const [inWatchlist, setInWatchlist] = useState<boolean>(false);
-  const [isDropped, setIsDropped]     = useState<boolean>(false);
+  // ── Step 3 (FEAT-SHOWPAGE-SYNC): Global tracking state via AppContext ────
+  // Previously isWatched/inWatchlist/isDropped were local useState flags,
+  // scoped to this component instance — navigating away and back (or
+  // checking the status from another page) lost the choice entirely.
+  // Pulling from the shared AppContext instead means every page reading
+  // trackedShows sees the same tracking state, and it survives navigation.
+  const { trackedShows, updateShowStatus } = useAppContext();
 
   // ── Step 4: Metadata tab tracker ──────────────────────────────────────────
   // Same placement rule as the toolstrip hooks above — declared before any
@@ -119,50 +109,6 @@ export default function ShowDetail(): React.ReactElement {
     };
   }, [showSlug]);
 
-  // ── Watching toggle ───────────────────────────────────────────────────────
-  // ON  → leave the Watchlist (can't be both planning-to-watch and watching)
-  // OFF → also clear Dropped (no longer in active history, so "dropped" is
-  //        no longer a meaningful status either)
-  function handleWatchedClick(): void {
-    setIsWatched((prev) => {
-      const next = !prev;
-      if (next) {
-        setInWatchlist(false);
-      } else {
-        setIsDropped(false);
-      }
-      return next;
-    });
-  }
-
-  // ── Watchlist toggle ──────────────────────────────────────────────────────
-  // ON → clear both active-history flags; this is a "plan to watch" state,
-  //      not an active or historical one — it can't coexist with either.
-  function handleWatchlistClick(): void {
-    setInWatchlist((prev) => {
-      const next = !prev;
-      if (next) {
-        setIsWatched(false);
-        setIsDropped(false);
-      }
-      return next;
-    });
-  }
-
-  // ── Dropped toggle ────────────────────────────────────────────────────────
-  // ON → force Watching to true (dropping implies watch history) and clear
-  //      Watchlist (it's no longer a future show, you already started it).
-  function handleDroppedClick(): void {
-    setIsDropped((prev) => {
-      const next = !prev;
-      if (next) {
-        setIsWatched(true);
-        setInWatchlist(false);
-      }
-      return next;
-    });
-  }
-
   // ── Season completed toggle ────────────────────────────────────────────────
   // Placeholder local-only tracking — toggling does not persist anywhere
   // yet. Uses a Set so checking many seasons stays cheap and lookups are
@@ -196,6 +142,49 @@ export default function ShowDetail(): React.ReactElement {
 
   // ── 4. Minimal render — title + poster only ───────────────────────────────
   const posterUrl = getPosterUrl(showData.poster_path, "w500");
+
+  // ── Step 3 (FEAT-SHOWPAGE-SYNC): Derive toggle state from AppContext ──────
+  // currentTracked looks this show up by ID inside the global trackedShows
+  // array. showData.id is the real numeric TMDB series ID (not showSlug,
+  // which may be the same numeric string from the URL, but showData.id is
+  // the authoritative source once the fetch has resolved).
+  const currentTracked = trackedShows.find((s) => s.id === showData.id);
+
+  const isWatched   = currentTracked?.status === "watching";
+  const inWatchlist = currentTracked?.status === "watchlist";
+  const isDropped   = currentTracked?.status === "dropped";
+
+  // The TrackedShow object passed to updateShowStatus on every click —
+  // built from the real fetched TMDB fields, per the spec's note.
+  const showObject: TrackedShow = {
+    id: showData.id,
+    name: showData.name,
+    poster_path: showData.poster_path ?? "",
+    // status here is a placeholder — updateShowStatus's second argument is
+    // what actually determines the resulting status; this field is only
+    // read by updateShowStatus when appending a brand-new entry, and even
+    // then gets overwritten with the resolved status. ESLint/TS just needs
+    // the object to satisfy the TrackedShow shape at the call site.
+    status: "watching",
+  };
+
+  // ── Watching toggle ───────────────────────────────────────────────────────
+  // Already watching → clicking again removes tracking entirely.
+  // Not watching → clicking sets it to "watching" (global context handles
+  // clearing watchlist/dropped on the others' side of this same array).
+  function handleWatchedClick(): void {
+    updateShowStatus(showObject, isWatched ? "removed" : "watching");
+  }
+
+  // ── Watchlist toggle ──────────────────────────────────────────────────────
+  function handleWatchlistClick(): void {
+    updateShowStatus(showObject, inWatchlist ? "removed" : "watchlist");
+  }
+
+  // ── Dropped toggle ────────────────────────────────────────────────────────
+  function handleDroppedClick(): void {
+    updateShowStatus(showObject, isDropped ? "removed" : "dropped");
+  }
 
   // ── Step 3: Extract release year from "YYYY-MM-DD" ────────────────────────
   // first_air_date is typed as a non-optional string on TMDBShowDetail, but
